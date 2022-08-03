@@ -73,7 +73,7 @@ public class GmSSL {
 	public native byte[] publicKeyEncrypt(String algor, byte[] in, byte[] publicKey);
 	public native byte[] publicKeyDecrypt(String algor, byte[] in, byte[] privateKey);
 	public native byte[] deriveKey(String algor, int keyLength, byte[] peerPublicKey, byte[] privateKey);
-	public native String[] getErrorStrings();
+	//public native String[] getErrorStrings();
 
 	public static void main(String[] args) {
 		int i;
@@ -121,12 +121,14 @@ public class GmSSL {
 		}
 		System.out.println(encAlgors[i]);
 
+		/*
 		System.out.print("DeriveKeyAlgorithms: ");
 		String[] kdfs = gmssl.getDeriveKeyAlgorithms();
 		for (i = 0; i < kdfs.length - 1; i++) {
 			System.out.print(kdfs[i] + ", ");
 		}
 		System.out.println(kdfs[i]);
+		*/
 
 		/* Crypto operations */
 		System.out.print("Random(20) = ");
@@ -136,14 +138,14 @@ public class GmSSL {
 		}
 		System.out.println("");
 
-		System.out.printf("SMS4 IV length = %d bytes, key length = %d bytes, block size = %d bytes\n",
-			gmssl.getCipherIVLength("SMS4"),
-			gmssl.getCipherKeyLength("SMS4"),
-			gmssl.getCipherBlockSize("SMS4"));
+		System.out.printf("SM4 IV length = %d bytes, key length = %d bytes, block size = %d bytes\n",
+			gmssl.getCipherIVLength("SM4-CBC-PADDING"),
+			gmssl.getCipherKeyLength("SM4-CBC-PADDING"),
+			gmssl.getCipherBlockSize("SM4-CBC-PADDING"));
 
 		byte[] key = {1,2,3,4,5,6,7,8,1,2,3,4,5,6,7,8};
 		byte[] iv = {1,2,3,4,5,6,7,8,1,2,3,4,5,6,7,8};
-		byte[] ciphertext = gmssl.symmetricEncrypt("SMS4", "01234567".getBytes(), key, iv);
+		byte[] ciphertext = gmssl.symmetricEncrypt("SM4-CBC-PADDING", "01234567".getBytes(), key, iv);
 
 		System.out.print("Ciphertext: ");
 		for (i = 0; i < ciphertext.length; i++) {
@@ -151,7 +153,7 @@ public class GmSSL {
 		}
 		System.out.println("");
 
-		byte[] plaintext = gmssl.symmetricDecrypt("sms4", ciphertext, key, iv);
+		byte[] plaintext = gmssl.symmetricDecrypt("SM4-CBC-PADDING", ciphertext, key, iv);
 
 		System.out.print("Plaintext: ");
 		for (i = 0; i < plaintext.length; i++) {
@@ -174,55 +176,53 @@ public class GmSSL {
 		System.out.println("");
 
 		byte[] sm2PrivateKey = new byte[] {
-		(byte)0x30,(byte)0x77,(byte)0x02,(byte)0x01,(byte)0x01,(byte)0x04,(byte)0x20,(byte)0x28,
-		(byte)0x7d,(byte)0x3f,(byte)0xb9,(byte)0xf4,(byte)0xbb,(byte)0xc8,(byte)0xbd,(byte)0xe1,
-		(byte)0x54,(byte)0x75,(byte)0x87,(byte)0x9f,(byte)0x08,(byte)0x61,(byte)0x20,(byte)0xe3,
-		(byte)0x65,(byte)0xf8,(byte)0xb2,(byte)0xca,(byte)0x14,(byte)0x26,(byte)0x81,(byte)0xf6,
-		(byte)0x1e,(byte)0xd8,(byte)0x7f,(byte)0xc0,(byte)0x66,(byte)0x20,(byte)0x29,(byte)0xa0,
-		(byte)0x0a,(byte)0x06,(byte)0x08,(byte)0x2a,(byte)0x81,(byte)0x1c,(byte)0xcf,(byte)0x55,
-		(byte)0x01,(byte)0x82,(byte)0x2d,(byte)0xa1,(byte)0x44,(byte)0x03,(byte)0x42,(byte)0x00,
-		(byte)0x04,(byte)0xb1,(byte)0x1e,(byte)0x4c,(byte)0x8c,(byte)0xa9,(byte)0x02,(byte)0xf2,
-		(byte)0x8d,(byte)0x8b,(byte)0x98,(byte)0xd2,(byte)0xd0,(byte)0xc4,(byte)0xf1,(byte)0x60,
-		(byte)0x91,(byte)0xfb,(byte)0x61,(byte)0x62,(byte)0x00,(byte)0xcf,(byte)0x93,(byte)0x4e,
-		(byte)0x3f,(byte)0xca,(byte)0xfd,(byte)0xf7,(byte)0x9d,(byte)0x76,(byte)0xb8,(byte)0x2b,
-		(byte)0xb3,(byte)0x30,(byte)0x98,(byte)0x65,(byte)0xf5,(byte)0x12,(byte)0xab,(byte)0x45,
-		(byte)0x78,(byte)0x29,(byte)0x87,(byte)0xdc,(byte)0x74,(byte)0x07,(byte)0x75,(byte)0xd0,
-		(byte)0x68,(byte)0xad,(byte)0x85,(byte)0x71,(byte)0x08,(byte)0xc2,(byte)0x19,(byte)0xf0,
-		(byte)0xf4,(byte)0xca,(byte)0x6e,(byte)0xe1,(byte)0xea,(byte)0x86,(byte)0xe6,(byte)0x21,
-		(byte)0x76};
+		(byte)0x64,(byte)0x97,(byte)0x32,(byte)0x1b,(byte)0x84,(byte)0xcd,(byte)0x18,(byte)0x44,
+		(byte)0x88,(byte)0x15,(byte)0x73,(byte)0x16,(byte)0x2b,(byte)0x27,(byte)0x04,(byte)0x6e,
+		(byte)0x77,(byte)0x5e,(byte)0xee,(byte)0xb4,(byte)0x62,(byte)0x33,(byte)0x22,(byte)0x1d,
+		(byte)0xea,(byte)0x0f,(byte)0x84,(byte)0x82,(byte)0x32,(byte)0xe1,(byte)0x0e,(byte)0x72,
+		(byte)0xb6,(byte)0x92,(byte)0xa2,(byte)0x8b,(byte)0xda,(byte)0xe8,(byte)0x17,(byte)0x13,
+		(byte)0x65,(byte)0xe4,(byte)0x99,(byte)0x09,(byte)0x75,(byte)0xd3,(byte)0x9c,(byte)0x19,
+		(byte)0x41,(byte)0x29,(byte)0xb8,(byte)0x6a,(byte)0xed,(byte)0xec,(byte)0xd2,(byte)0xe8,
+		(byte)0xc1,(byte)0xcb,(byte)0xd1,(byte)0x4b,(byte)0xc2,(byte)0x8a,(byte)0xf8,(byte)0xd7,
+		(byte)0x53,(byte)0x45,(byte)0x34,(byte)0x8c,(byte)0x71,(byte)0xfb,(byte)0x5b,(byte)0x78,
+		(byte)0x23,(byte)0x38,(byte)0x56,(byte)0x76,(byte)0x69,(byte)0x76,(byte)0x8b,(byte)0xba,
+		(byte)0x1a,(byte)0x0f,(byte)0xae,(byte)0x18,(byte)0x71,(byte)0xaa,(byte)0xe6,(byte)0x9f,
+		(byte)0x3e,(byte)0x8c,(byte)0x9e,(byte)0x57,(byte)0x5d,(byte)0xcc,(byte)0xa4,(byte)0x36,
+		};
 
 		byte[] sm2PublicKey = new byte[] {
-		(byte)0x30,(byte)0x59,(byte)0x30,(byte)0x13,(byte)0x06,(byte)0x07,(byte)0x2a,(byte)0x86,
-		(byte)0x48,(byte)0xce,(byte)0x3d,(byte)0x02,(byte)0x01,(byte)0x06,(byte)0x08,(byte)0x2a,
-		(byte)0x81,(byte)0x1c,(byte)0xcf,(byte)0x55,(byte)0x01,(byte)0x82,(byte)0x2d,(byte)0x03,
-		(byte)0x42,(byte)0x00,(byte)0x04,(byte)0xb1,(byte)0x1e,(byte)0x4c,(byte)0x8c,(byte)0xa9,
-		(byte)0x02,(byte)0xf2,(byte)0x8d,(byte)0x8b,(byte)0x98,(byte)0xd2,(byte)0xd0,(byte)0xc4,
-		(byte)0xf1,(byte)0x60,(byte)0x91,(byte)0xfb,(byte)0x61,(byte)0x62,(byte)0x00,(byte)0xcf,
-		(byte)0x93,(byte)0x4e,(byte)0x3f,(byte)0xca,(byte)0xfd,(byte)0xf7,(byte)0x9d,(byte)0x76,
-		(byte)0xb8,(byte)0x2b,(byte)0xb3,(byte)0x30,(byte)0x98,(byte)0x65,(byte)0xf5,(byte)0x12,
-		(byte)0xab,(byte)0x45,(byte)0x78,(byte)0x29,(byte)0x87,(byte)0xdc,(byte)0x74,(byte)0x07,
-		(byte)0x75,(byte)0xd0,(byte)0x68,(byte)0xad,(byte)0x85,(byte)0x71,(byte)0x08,(byte)0xc2,
-		(byte)0x19,(byte)0xf0,(byte)0xf4,(byte)0xca,(byte)0x6e,(byte)0xe1,(byte)0xea,(byte)0x86,
-		(byte)0xe6,(byte)0x21,(byte)0x76};
+		(byte)0x64,(byte)0x97,(byte)0x32,(byte)0x1b,(byte)0x84,(byte)0xcd,(byte)0x18,(byte)0x44,
+		(byte)0x88,(byte)0x15,(byte)0x73,(byte)0x16,(byte)0x2b,(byte)0x27,(byte)0x04,(byte)0x6e,
+		(byte)0x77,(byte)0x5e,(byte)0xee,(byte)0xb4,(byte)0x62,(byte)0x33,(byte)0x22,(byte)0x1d,
+		(byte)0xea,(byte)0x0f,(byte)0x84,(byte)0x82,(byte)0x32,(byte)0xe1,(byte)0x0e,(byte)0x72,
+		(byte)0xb6,(byte)0x92,(byte)0xa2,(byte)0x8b,(byte)0xda,(byte)0xe8,(byte)0x17,(byte)0x13,
+		(byte)0x65,(byte)0xe4,(byte)0x99,(byte)0x09,(byte)0x75,(byte)0xd3,(byte)0x9c,(byte)0x19,
+		(byte)0x41,(byte)0x29,(byte)0xb8,(byte)0x6a,(byte)0xed,(byte)0xec,(byte)0xd2,(byte)0xe8,
+		(byte)0xc1,(byte)0xcb,(byte)0xd1,(byte)0x4b,(byte)0xc2,(byte)0x8a,(byte)0xf8,(byte)0xd7,
+		(byte)0x00,(byte)0x00,(byte)0x00,(byte)0x00,(byte)0x00,(byte)0x00,(byte)0x00,(byte)0x00,
+		(byte)0x00,(byte)0x00,(byte)0x00,(byte)0x00,(byte)0x00,(byte)0x00,(byte)0x00,(byte)0x00,
+		(byte)0x00,(byte)0x00,(byte)0x00,(byte)0x00,(byte)0x00,(byte)0x00,(byte)0x00,(byte)0x00,
+		(byte)0x00,(byte)0x00,(byte)0x00,(byte)0x00,(byte)0x00,(byte)0x00,(byte)0x00,(byte)0x00,
+		};
 
-		byte[] sig = gmssl.sign("sm2sign", dgst, sm2PrivateKey);
+		byte[] sig = gmssl.sign("SM2", dgst, sm2PrivateKey);
 		System.out.print("SM2 Signature : ");
 		for (i = 0; i < sig.length; i++) {
 			System.out.printf("%02X", sig[i]);
 		}
 		System.out.print("\n");
 
-		int vret = gmssl.verify("sm2sign", dgst, sig, sm2PublicKey);
+		int vret = gmssl.verify("SM2", dgst, sig, sm2PublicKey);
 		System.out.println("Verification result = " + vret);
 
-		byte[] sm2Ciphertext = gmssl.publicKeyEncrypt("sm2encrypt-with-sm3", dgst, sm2PublicKey);
+		byte[] sm2Ciphertext = gmssl.publicKeyEncrypt("SM2", dgst, sm2PublicKey);
 		System.out.print("SM2 Ciphertext : ");
 		for (i = 0; i < sm2Ciphertext.length; i++) {
 			System.out.printf("%02X", sm2Ciphertext[i]);
 		}
 		System.out.print("\n");
 
-		byte[] sm2Plaintext = gmssl.publicKeyDecrypt("sm2encrypt-with-sm3", sm2Ciphertext, sm2PrivateKey);
+		byte[] sm2Plaintext = gmssl.publicKeyDecrypt("SM2", sm2Ciphertext, sm2PrivateKey);
 		System.out.print("SM2 Plaintext : ");
 		for (i = 0; i < sm2Plaintext.length; i++) {
 			System.out.printf("%02X", sm2Plaintext[i]);
@@ -230,11 +230,13 @@ public class GmSSL {
 		System.out.print("\n");
 
 		/* Errors */
+		/*
 		System.out.println("Errors:");
 		String[] errors = gmssl.getErrorStrings();
 		for (i = 0; i < errors.length; i++) {
 			System.out.println(errors[i]);
 		}
+		*/
 
 	}
 
