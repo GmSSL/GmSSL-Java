@@ -60,3 +60,10 @@ GmSSL Java Wrapper支持如下密码功能：
 * 如果返回值为整数，仅当返回值为大于0时正确，小于等于0时错误。
 * 如果返回值为字符串或字节数组，返回空表示错误
 
+### Roadmap
+
+[] Update C API
+[] New Java API
+[] Include GmSSL in this repo
+
+
