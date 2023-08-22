@@ -12,6 +12,57 @@ GmSSL Java包含的功能如下：
  * ZUC序列密码加密
  * SM2证书的解析、验证
 
+### 编译
+
+首先在源代码目录下创建编译目录`build`
+
+```
+mkdir build
+```
+
+在编译目录下，通过CMake编译JNI本地代码
+
+```
+cd build
+cmake ..
+make
+cd ..
+```
+
+在编译完成后，会在`build`目录下生成`libgmssljni.so`动态库。
+
+然后编译项目中的Java代码并生成JAR包
+
+```
+javac org/gmssl/GmSSLJNI.java
+jar cf GmSSLJNI.jar org/gmssl/GmSSLJNI.class
+```
+
+现在已经生成了`GmSSLJNI.jar`，注意这个JAR包依赖`build`目录下的libgmssljni动态库，因为JAR包中的Java代码只提供了接口，而功能实现都是由libgmssljni的C代码实现的。
+
+为了测试功能，还需要准备一个测试用的证书文件，GmSSL-Java目前支持PEM格式的证书文件。将下面的文本复制到文件`ROOTCA.PEM`文件中并保存。
+
+```
+-----BEGIN CERTIFICATE-----
+MIIBszCCAVegAwIBAgIIaeL+wBcKxnswDAYIKoEcz1UBg3UFADAuMQswCQYDVQQG
+EwJDTjEOMAwGA1UECgwFTlJDQUMxDzANBgNVBAMMBlJPT1RDQTAeFw0xMjA3MTQw
+MzExNTlaFw00MjA3MDcwMzExNTlaMC4xCzAJBgNVBAYTAkNOMQ4wDAYDVQQKDAVO
+UkNBQzEPMA0GA1UEAwwGUk9PVENBMFkwEwYHKoZIzj0CAQYIKoEcz1UBgi0DQgAE
+MPCca6pmgcchsTf2UnBeL9rtp4nw+itk1Kzrmbnqo05lUwkwlWK+4OIrtFdAqnRT
+V7Q9v1htkv42TsIutzd126NdMFswHwYDVR0jBBgwFoAUTDKxl9kzG8SmBcHG5Yti
+W/CXdlgwDAYDVR0TBAUwAwEB/zALBgNVHQ8EBAMCAQYwHQYDVR0OBBYEFEwysZfZ
+MxvEpgXBxuWLYlvwl3ZYMAwGCCqBHM9VAYN1BQADSAAwRQIgG1bSLeOXp3oB8H7b
+53W+CKOPl2PknmWEq/lMhtn25HkCIQDaHDgWxWFtnCrBjH16/W3Ezn7/U/Vjo5xI
+pDoiVhsLwg==
+-----END CERTIFICATE-----
+```
+
+现在可执行程序和测试文件都准备好了，可以执行下面的命令进行测试
+
+```
+java -cp GmSSLJNI.jar -Djava.library.path=build org.gmssl.GmSSLJNI
+```
+
 ## 接口说明
 
 GmSSL Java Wrapper的接口如下：
@@ -160,5 +211,4 @@ Java返回值和GmSSL C函数返回值保持一致
 [] Update C API
 [] New Java API
 [] Include GmSSL in this repo
-
 

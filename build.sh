@@ -5,7 +5,9 @@ cd build
 cmake ..
 make
 cd ..
+
 javac org/gmssl/GmSSLJNI.java
+jar cf GmSSLJNI.jar org/gmssl/GmSSLJNI.class
 
 cat << EOF > ROOTCA.pem
 -----BEGIN CERTIFICATE-----
@@ -22,4 +24,5 @@ pDoiVhsLwg==
 -----END CERTIFICATE-----
 EOF
 
-java -Djava.library.path=build org.gmssl.GmSSLJNI
+#java -Djava.library.path=build org.gmssl.GmSSLJNI
+java -cp GmSSLJNI.jar -Djava.library.path=build org.gmssl.GmSSLJNI
