@@ -14,6 +14,41 @@ GmSSL Java包含的功能如下：
 
 ### 编译
 
+首先需要在系统上安装基础的GCC编译工具链、CMake和Java环境，在Ubuntu/Debian系统上可以执行如下命令安装依赖的工具。
+
+```bash
+sudo apt update
+sudo apt install build-essential cmake default-jdk
+```
+
+安装完成后可以通过CMake编译
+
+```bash
+mkdir build
+cd build
+cmake ..
+make
+make test
+```
+
+编译并测试成功后可以显示
+
+```bash
+$ make test
+Running tests...
+Test project /path/to/GmSSL-Java/build
+    Start 1: main
+1/1 Test #1: main .............................   Passed    2.27 sec
+
+100% tests passed, 0 tests failed out of 1
+
+Total Test time (real) =   2.27 sec
+```
+
+此时查看`build`目录下可以看到生成的本地动态库`libgmssljni`和GmSSLJNI的Jar包`GmSSLJNI.jar`、`GmSSLJNI-2.0.0.jar`。
+
+### 手动编译
+
 首先在源代码目录下创建编译目录`build`
 
 ```
