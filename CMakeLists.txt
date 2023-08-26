@@ -22,7 +22,6 @@ add_jar(GmSSLJNI
 	OUTPUT_DIR ${CMAKE_CURRENT_BINARY_DIR}
 	SOURCES org/gmssl/GmSSLJNI.java)
 
-
 enable_testing()
 
 set(certfile
@@ -41,5 +40,5 @@ set(certfile
 file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/ROOTCA.pem ${certfile})
 
 # java -cp GmSSLJNI.jar org.gmssl.GmSSLJNI
-add_test(NAME main COMMAND java -cp GmSSLJNI.jar org.gmssl.GmSSLJNI)
+add_test(NAME main COMMAND java -cp GmSSLJNI.jar -Djava.library.path=./ org.gmssl.GmSSLJNI)
 
