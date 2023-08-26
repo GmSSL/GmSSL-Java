@@ -13,14 +13,14 @@ include(UseJava)
 include_directories(jni)
 include_directories(/usr/local/include)
 
-# javac org/gmssl/GmSSLJNI.java -d .
+# javac src/main/java/org/gmssl/GmSSLJNI.java -d .
 # jar cf GmSSLJNI.jar GmSSLJNI.class
 add_jar(GmSSLJNI
 	VERSION 2.0.0
 	ENTRY_POINT org.gmssl.GmSSLJNI
 	GENERATE_NATIVE_HEADERS
 	OUTPUT_DIR ${CMAKE_CURRENT_BINARY_DIR}
-	SOURCES org/gmssl/GmSSLJNI.java)
+	SOURCES src/main/java/org/gmssl/GmSSLJNI.java)
 
 enable_testing()
 
