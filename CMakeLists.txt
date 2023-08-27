@@ -16,11 +16,21 @@ include_directories(/usr/local/include)
 # javac src/main/java/org/gmssl/GmSSLJNI.java -d .
 # jar cf GmSSLJNI.jar GmSSLJNI.class
 add_jar(GmSSLJNI
-	VERSION 2.0.0
+	VERSION 2.1.0-dev
 	ENTRY_POINT org.gmssl.GmSSLJNI
 	GENERATE_NATIVE_HEADERS
 	OUTPUT_DIR ${CMAKE_CURRENT_BINARY_DIR}
-	SOURCES src/main/java/org/gmssl/GmSSLJNI.java)
+	SOURCES src/main/java/org/gmssl/GmSSLJNI.java
+		src/main/java/org/gmssl/GmSSLJNIException.java
+		src/main/java/org/gmssl/Sm3.java
+		src/main/java/org/gmssl/Sm3Hmac.java
+		src/main/java/org/gmssl/Sm4.java
+		src/main/java/org/gmssl/Sm4Cbc.java
+		src/main/java/org/gmssl/Sm4Ctr.java
+		src/main/java/org/gmssl/Sm4Gcm.java
+		src/main/java/org/gmssl/Sm2Key.java
+		src/main/java/org/gmssl/Sm2Signature.java
+	)
 
 enable_testing()
 

@@ -11,7 +11,7 @@ package org.gmssl;
 
 public class GmSSLJNI {
 
-	public final static String GMSSL_JNI_VERSION = "GmSSL JNI 2.0.0";
+	public final static String GMSSL_JNI_VERSION = "GmSSL JNI 2.1.0 dev";
 
 	public final static int SM3_DIGEST_SIZE = 32;
 	public final static int SM3_HMAC_SIZE = 32;
