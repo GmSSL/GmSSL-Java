@@ -70,6 +70,11 @@ public class GmSSLJNI {
 	public final static native int sm4_gcm_decrypt_init(long sm4_gcm_ctx, byte[] key, byte[] iv, byte[] aad, int taglen);
 	public final static native int sm4_gcm_decrypt_update(long sm4_gcm_ctx, byte[] in, int in_offset, int inlen, byte[] out, int out_offset);
 	public final static native int sm4_gcm_decrypt_finish(long sm4_gcm_ctx, byte[] out, int out_offset);
+	public final static native long zuc_ctx_new();
+	public final static native void zuc_ctx_free(long zuc_ctx);
+	public final static native int zuc_encrypt_init(long zuc_ctx, byte[] key, byte[] iv);
+	public final static native int zuc_encrypt_update(long zuc_ctx, byte[] in, int in_offset, int inlen, byte[] out, int out_offset);
+	public final static native int zuc_encrypt_finish(long zuc_ctx, byte[] out, int out_offset);
 	public final static native long sm2_key_generate();
 	public final static native void sm2_key_free(long sm2_key);
 	public final static native int sm2_private_key_info_encrypt_to_pem(long sm2_key, String pass, String file);

@@ -784,6 +784,7 @@ end:
 	return ret;
 }
 
+
 /*
  * Class:     org_gmssl_GmSSLJNI
  * Method:    sm4_ctr_ctx_new
@@ -1417,6 +1418,171 @@ JNIEXPORT jlong JNICALL Java_org_gmssl_GmSSLJNI_sm2_1key_1generate(
 		return 0;
 	}
 	return sm2_key;
+}
+
+/*
+ * Class:     org_gmssl_GmSSLJNI
+ * Method:    zuc_ctx_new
+ * Signature: ()J
+ */
+JNIEXPORT jlong JNICALL Java_org_gmssl_GmSSLJNI_zuc_1ctx_1new(
+	JNIEnv *env, jclass this)
+{
+	jlong zuc_ctx;
+
+	if (!(zuc_ctx = (jlong)malloc(sizeof(ZUC_CTX)))) {
+		error_print();
+		return 0;
+	}
+	memset((ZUC_CTX *)zuc_ctx, 0, sizeof(ZUC_CTX));
+	return zuc_ctx;
+}
+
+/*
+ * Class:     org_gmssl_GmSSLJNI
+ * Method:    zuc_ctx_free
+ * Signature: (J)V
+ */
+JNIEXPORT void JNICALL Java_org_gmssl_GmSSLJNI_zuc_1ctx_1free(
+	JNIEnv *env, jclass this,
+	jlong zuc_ctx)
+{
+	if (zuc_ctx) {
+		gmssl_secure_clear((ZUC_CTX *)zuc_ctx, sizeof(ZUC_CTX));
+		free((ZUC_CTX *)zuc_ctx);
+	}
+}
+
+/*
+ * Class:     org_gmssl_GmSSLJNI
+ * Method:    zuc_encrypt_init
+ * Signature: (J[B[B)I
+ */
+JNIEXPORT jint JNICALL Java_org_gmssl_GmSSLJNI_zuc_1encrypt_1init(
+	JNIEnv *env, jclass this,
+	jlong zuc_ctx, jbyteArray key, jbyteArray iv)
+{
+	jint ret = -1;
+	jbyte *keybuf = NULL;
+	jbyte *ivbuf = NULL;
+
+	if (!zuc_ctx) {
+		error_print();
+		return -1;
+	}
+	if (!(keybuf = (*env)->GetByteArrayElements(env, key, NULL))) {
+		error_print();
+		return -1;
+	}
+	if ((*env)->GetArrayLength(env, key) < ZUC_KEY_SIZE) {
+		error_print();
+		goto end;
+	}
+	if (!(ivbuf = (*env)->GetByteArrayElements(env, iv, NULL))) {
+		error_print();
+		goto end;
+	}
+	if ((*env)->GetArrayLength(env, iv) < ZUC_IV_SIZE) {
+		error_print();
+		goto end;
+	}
+	if (zuc_encrypt_init((ZUC_CTX *)zuc_ctx, (uint8_t *)keybuf, (uint8_t *)ivbuf) != 1) {
+		error_print();
+		goto end;
+	}
+	ret = 1;
+end:
+	(*env)->ReleaseByteArrayElements(env, key, keybuf, JNI_ABORT);
+	if (ivbuf) (*env)->ReleaseByteArrayElements(env, iv, ivbuf, JNI_ABORT);
+	return ret;
+}
+
+/*
+ * Class:     org_gmssl_GmSSLJNI
+ * Method:    zuc_encrypt_update
+ * Signature: (J[BII[BI)I
+ */
+JNIEXPORT jint JNICALL Java_org_gmssl_GmSSLJNI_zuc_1encrypt_1update(
+	JNIEnv *env, jclass this,
+	jlong zuc_ctx,
+	jbyteArray in, jint in_offset, jint inlen,
+	jbyteArray out, jint out_offset)
+{
+	jint ret = -1;
+	jbyte *inbuf = NULL;
+	jbyte *outbuf = NULL;
+	size_t outlen;
+	jint mode = JNI_ABORT;
+
+	if (!zuc_ctx) {
+		error_print();
+		return -1;
+	}
+	if (!(inbuf = (*env)->GetByteArrayElements(env, in, NULL))) {
+		error_print();
+		return -1;
+	}
+	if (check_buf(inbuf, (*env)->GetArrayLength(env, in), in_offset, inlen) != 1) {
+		error_print();
+		goto end;
+	}
+	if (!(outbuf = (*env)->GetByteArrayElements(env, out, NULL))) {
+		error_print();
+		goto end;
+	}
+	outlen = inlen + 4; // ZUC block size is sizeof(uint32_t)
+	if (check_buf(outbuf, (*env)->GetArrayLength(env, out), out_offset, outlen) != 1
+		|| outlen < inlen) {
+		error_print();
+		goto end;
+	}
+	if (zuc_encrypt_update((ZUC_CTX *)zuc_ctx, (uint8_t *)inbuf + in_offset, (size_t)inlen,
+		(uint8_t *)outbuf + out_offset, &outlen) != 1) {
+		error_print();
+		goto end;
+	}
+	mode = 0;
+	ret = (jint)outlen;
+end:
+	(*env)->ReleaseByteArrayElements(env, in, inbuf, JNI_ABORT);
+	if (outbuf) (*env)->ReleaseByteArrayElements(env, out, outbuf, mode);
+	return ret;
+}
+
+/*
+ * Class:     org_gmssl_GmSSLJNI
+ * Method:    zuc_encrypt_finish
+ * Signature: (J[BI)I
+ */
+JNIEXPORT jint JNICALL Java_org_gmssl_GmSSLJNI_zuc_1encrypt_1finish(
+	JNIEnv *env, jclass this,
+	jlong zuc_ctx, jbyteArray out, jint offset)
+{
+	jint ret = -1;
+	jbyte *outbuf = NULL;
+	size_t outlen;
+
+	if (!zuc_ctx) {
+		error_print();
+		return -1;
+	}
+	if (!(outbuf = (*env)->GetByteArrayElements(env, out, 0))) {
+		error_print();
+		goto end;
+	}
+	if ((*env)->GetArrayLength(env, out) < offset + 4) { // ZUC block size is sizeof(uint32) == 4
+		error_print();
+		goto end;
+	}
+	if (zuc_encrypt_finish((ZUC_CTX *)zuc_ctx,
+		(uint8_t *)outbuf + offset, &outlen) != 1) {
+		error_print();
+		goto end;
+	}
+	ret = (jint)outlen;
+end:
+	if (outbuf) (*env)->ReleaseByteArrayElements(env, out, outbuf, JNI_ABORT);
+	return ret;
 }
 
 /*

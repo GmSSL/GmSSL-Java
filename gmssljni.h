@@ -371,6 +371,46 @@ JNIEXPORT jint JNICALL Java_org_gmssl_GmSSLJNI_sm4_1gcm_1decrypt_1finish
 
 /*
  * Class:     org_gmssl_GmSSLJNI
+ * Method:    zuc_ctx_new
+ * Signature: ()J
+ */
+JNIEXPORT jlong JNICALL Java_org_gmssl_GmSSLJNI_zuc_1ctx_1new
+  (JNIEnv *, jclass);
+
+/*
+ * Class:     org_gmssl_GmSSLJNI
+ * Method:    zuc_ctx_free
+ * Signature: (J)V
+ */
+JNIEXPORT void JNICALL Java_org_gmssl_GmSSLJNI_zuc_1ctx_1free
+  (JNIEnv *, jclass, jlong);
+
+/*
+ * Class:     org_gmssl_GmSSLJNI
+ * Method:    zuc_encrypt_init
+ * Signature: (J[B[B)I
+ */
+JNIEXPORT jint JNICALL Java_org_gmssl_GmSSLJNI_zuc_1encrypt_1init
+  (JNIEnv *, jclass, jlong, jbyteArray, jbyteArray);
+
+/*
+ * Class:     org_gmssl_GmSSLJNI
+ * Method:    zuc_encrypt_update
+ * Signature: (J[BII[BI)I
+ */
+JNIEXPORT jint JNICALL Java_org_gmssl_GmSSLJNI_zuc_1encrypt_1update
+  (JNIEnv *, jclass, jlong, jbyteArray, jint, jint, jbyteArray, jint);
+
+/*
+ * Class:     org_gmssl_GmSSLJNI
+ * Method:    zuc_encrypt_finish
+ * Signature: (J[BI)I
+ */
+JNIEXPORT jint JNICALL Java_org_gmssl_GmSSLJNI_zuc_1encrypt_1finish
+  (JNIEnv *, jclass, jlong, jbyteArray, jint);
+
+/*
+ * Class:     org_gmssl_GmSSLJNI
  * Method:    sm2_key_generate
  * Signature: ()J
  */

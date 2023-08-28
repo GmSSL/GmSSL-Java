@@ -23,6 +23,11 @@ public class Sm2Key {
 		state = NOT_INITED;
 	}
 
+	public Sm2Key(long key, int state) {
+		sm2_key = key;
+		this.state = state;
+	}
+
 	public void generateKey() {
 		sm2_key = GmSSLJNI.sm2_key_generate();
 		state = PRIVATE_KEY;
