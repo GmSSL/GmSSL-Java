@@ -427,6 +427,38 @@ JNIEXPORT void JNICALL Java_org_gmssl_GmSSLJNI_sm2_1key_1free
 
 /*
  * Class:     org_gmssl_GmSSLJNI
+ * Method:    sm2_private_key_info_to_der
+ * Signature: (J)[B
+ */
+JNIEXPORT jbyteArray JNICALL Java_org_gmssl_GmSSLJNI_sm2_1private_1key_1info_1to_1der
+  (JNIEnv *, jclass, jlong);
+
+/*
+ * Class:     org_gmssl_GmSSLJNI
+ * Method:    sm2_private_key_info_from_der
+ * Signature: ([B)J
+ */
+JNIEXPORT jlong JNICALL Java_org_gmssl_GmSSLJNI_sm2_1private_1key_1info_1from_1der
+  (JNIEnv *, jclass, jbyteArray);
+
+/*
+ * Class:     org_gmssl_GmSSLJNI
+ * Method:    sm2_public_key_info_to_der
+ * Signature: (J)[B
+ */
+JNIEXPORT jbyteArray JNICALL Java_org_gmssl_GmSSLJNI_sm2_1public_1key_1info_1to_1der
+  (JNIEnv *, jclass, jlong);
+
+/*
+ * Class:     org_gmssl_GmSSLJNI
+ * Method:    sm2_public_key_info_from_der
+ * Signature: ([B)J
+ */
+JNIEXPORT jlong JNICALL Java_org_gmssl_GmSSLJNI_sm2_1public_1key_1info_1from_1der
+  (JNIEnv *, jclass, jbyteArray);
+
+/*
+ * Class:     org_gmssl_GmSSLJNI
  * Method:    sm2_private_key_info_encrypt_to_pem
  * Signature: (JLjava/lang/String;Ljava/lang/String;)I
  */

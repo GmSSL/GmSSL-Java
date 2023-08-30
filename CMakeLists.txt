@@ -36,6 +36,13 @@ add_jar(GmSSLJNI
 		src/main/java/org/gmssl/Sm9SignMasterKey.java
 		src/main/java/org/gmssl/Sm9Signature.java
 		src/main/java/org/gmssl/Certificate.java
+
+		src/main/java/org/gmssl/jce/GmSSLProvider.java
+		src/main/java/org/gmssl/jce/GmSSLMessageDigest.java
+		src/main/java/org/gmssl/jce/GmSSLMac.java
+		src/main/java/org/gmssl/jce/GmSSLCipher.java
+		src/main/java/org/gmssl/jce/GmSSLKeyPairGenerator.java
+		src/main/java/org/gmssl/jce/GmSSLSignature.java
 	)
 
 enable_testing()

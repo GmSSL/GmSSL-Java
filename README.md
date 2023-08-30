@@ -5,7 +5,7 @@
 GmSSL Java包含的功能如下：
 
  * 随机数生成
- * SM3哈希、SM3 HMAC 和 SM3 PBKDF2密钥导出
+ * SM3哈希和SM3 HMAC
  * SM4分组密码和SM4 CBC/CTR/GCM模式
  * SM2签名、加密
  * SM9签名、加密

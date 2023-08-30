@@ -1600,6 +1600,146 @@ JNIEXPORT void JNICALL Java_org_gmssl_GmSSLJNI_sm2_1key_1free(
 	}
 }
 
+/*
+ * Class:     org_gmssl_GmSSLJNI
+ * Method:    sm2_private_key_info_to_der
+ * Signature: (J)[B
+ */
+JNIEXPORT jbyteArray JNICALL Java_org_gmssl_GmSSLJNI_sm2_1private_1key_1info_1to_1der(
+	JNIEnv *env, jclass this,
+	jlong sm2_key)
+{
+	jbyteArray ret = NULL;
+	uint8_t outbuf[1024];
+	uint8_t *p = outbuf;
+	size_t outlen = 0;
+
+	if (sm2_private_key_info_to_der((SM2_KEY *)sm2_key, &p, &outlen) != 1) {
+		error_print();
+		return NULL;
+	}
+	if (!(ret = (*env)->NewByteArray(env, outlen))) {
+		error_print();
+		gmssl_secure_clear(outbuf, sizeof(outbuf));
+		return NULL;
+	}
+	(*env)->SetByteArrayRegion(env, ret, 0, outlen, (jbyte *)outbuf);
+	gmssl_secure_clear(outbuf, sizeof(outbuf));
+	return ret;
+}
+
+/*
+ * Class:     org_gmssl_GmSSLJNI
+ * Method:    sm2_private_key_info_from_der
+ * Signature: ([B)J
+ */
+JNIEXPORT jlong JNICALL Java_org_gmssl_GmSSLJNI_sm2_1private_1key_1info_1from_1der(
+	JNIEnv *env, jclass this,
+	jbyteArray der)
+{
+	jlong ret = 0;
+	SM2_KEY *sm2_key = NULL;
+	jbyte *derbuf = NULL;
+	size_t derlen;
+	const uint8_t *attrs;
+	size_t attrslen;
+	const uint8_t *cp;
+
+	if (!(derbuf = (*env)->GetByteArrayElements(env, der, NULL))) {
+		error_print();
+		return 0;
+	}
+	derlen = (*env)->GetArrayLength(env, der);
+
+	if (!(sm2_key = (SM2_KEY *)malloc(sizeof(SM2_KEY)))) {
+		error_print();
+		goto end;
+	}
+	cp = (const uint8_t *)derbuf;
+	if (sm2_private_key_info_from_der(sm2_key, &attrs, &attrslen, &cp, &derlen) != 1) {
+		error_print();
+		goto end;
+	}
+	ret = (jlong)sm2_key;
+	sm2_key = NULL;
+end:
+	(*env)->ReleaseByteArrayElements(env, der, derbuf, JNI_ABORT);
+	if (sm2_key) {
+		gmssl_secure_clear(sm2_key, sizeof(SM2_KEY));
+		free(sm2_key);
+	}
+	return ret;
+}
+
+/*
+ * Class:     org_gmssl_GmSSLJNI
+ * Method:    sm2_public_key_info_to_der
+ * Signature: (J)[B
+ */
+JNIEXPORT jbyteArray JNICALL Java_org_gmssl_GmSSLJNI_sm2_1public_1key_1info_1to_1der(
+	JNIEnv *env, jclass this,
+	jlong sm2_key)
+{
+	jbyteArray ret = NULL;
+	uint8_t outbuf[1024];
+	uint8_t *p = outbuf;
+	size_t outlen = 0;
+
+	if (sm2_public_key_info_to_der((SM2_KEY *)sm2_key, &p, &outlen) != 1) {
+		error_print();
+		return NULL;
+	}
+	if (!(ret = (*env)->NewByteArray(env, outlen))) {
+		error_print();
+		gmssl_secure_clear(outbuf, sizeof(outbuf));
+		return NULL;
+	}
+	(*env)->SetByteArrayRegion(env, ret, 0, outlen, (jbyte *)outbuf);
+	gmssl_secure_clear(outbuf, sizeof(outbuf));
+	return ret;
+}
+
+/*
+ * Class:     org_gmssl_GmSSLJNI
+ * Method:    sm2_public_key_info_from_der
+ * Signature: ([B)J
+ */
+JNIEXPORT jlong JNICALL Java_org_gmssl_GmSSLJNI_sm2_1public_1key_1info_1from_1der(
+	JNIEnv *env, jclass this,
+	jbyteArray der)
+{
+	jlong ret = 0;
+	SM2_KEY *sm2_key = NULL;
+	jbyte *derbuf = NULL;
+	size_t derlen;
+	const uint8_t *cp;
+
+	if (!(derbuf = (*env)->GetByteArrayElements(env, der, NULL))) {
+		error_print();
+		return 0;
+	}
+	derlen = (*env)->GetArrayLength(env, der); // return jsize which is int!
+
+	if (!(sm2_key = (SM2_KEY *)malloc(sizeof(SM2_KEY)))) {
+		error_print();
+		goto end;
+	}
+	cp = (const uint8_t *)derbuf;
+	if (sm2_public_key_info_from_der(sm2_key, &cp, &derlen) != 1) {
+		error_print();
+		goto end;
+	}
+	ret = (jlong)sm2_key;
+	sm2_key = NULL;
+end:
+	(*env)->ReleaseByteArrayElements(env, der, derbuf, JNI_ABORT);
+	if (sm2_key) {
+		gmssl_secure_clear(sm2_key, sizeof(SM2_KEY));
+		free(sm2_key);
+	}
+	return ret;
+}
+
 // FIXME: ReleaseStringUTFChars ?? no mode?
 
 /*

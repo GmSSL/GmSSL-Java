@@ -77,6 +77,12 @@ public class GmSSLJNI {
 	public final static native int zuc_encrypt_finish(long zuc_ctx, byte[] out, int out_offset);
 	public final static native long sm2_key_generate();
 	public final static native void sm2_key_free(long sm2_key);
+
+	public final static native byte[] sm2_private_key_info_to_der(long sm2_key);
+	public final static native long sm2_private_key_info_from_der(byte[] der);
+	public final static native byte[] sm2_public_key_info_to_der(long sm2_key);
+	public final static native long sm2_public_key_info_from_der(byte[] der);
+
 	public final static native int sm2_private_key_info_encrypt_to_pem(long sm2_key, String pass, String file);
 	public final static native long sm2_private_key_info_decrypt_from_pem(String pass, String file);
 	public final static native int sm2_public_key_info_to_pem(long sm2_key, String file);
