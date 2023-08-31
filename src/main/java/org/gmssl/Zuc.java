@@ -10,23 +10,22 @@
 package org.gmssl;
 
 
-public class Sm4Cbc {
+public class Zuc {
 
-	public final static int KEY_SIZE = GmSSLJNI.SM4_KEY_SIZE;
-	public final static int IV_SIZE = GmSSLJNI.SM4_BLOCK_SIZE;
+	public final static int KEY_SIZE = GmSSLJNI.ZUC_KEY_SIZE;
+	public final static int IV_SIZE = GmSSLJNI.ZUC_IV_SIZE;
 
-	private long sm4_cbc_ctx = 0;
-	private boolean do_encrypt = true;
+	private long zuc_ctx = 0;
 	private boolean inited = false;
 
-	public Sm4Cbc() {
-		if ((this.sm4_cbc_ctx = GmSSLJNI.sm4_cbc_ctx_new()) == 0) {
+	public Zuc() {
+		if ((this.zuc_ctx = GmSSLJNI.zuc_ctx_new()) == 0) {
 			throw new GmSSLException("");
 		}
 		this.inited = false;
 	}
 
-	public void init(byte[] key, byte[] iv, boolean do_encrypt) {
+	public void init(byte[] key, byte[] iv) {
 
 		if (key == null
 			|| key.length != this.KEY_SIZE
@@ -35,17 +34,10 @@ public class Sm4Cbc {
 			throw new GmSSLException("");
 		}
 
-		if (do_encrypt == true) {
-			if (GmSSLJNI.sm4_cbc_encrypt_init(this.sm4_cbc_ctx, key, iv) != 1) {
-				throw new GmSSLException("");
-			}
-		} else {
-			if (GmSSLJNI.sm4_cbc_decrypt_init(this.sm4_cbc_ctx, key, iv) != 1) {
-				throw new GmSSLException("");
-			}
+		if (GmSSLJNI.zuc_encrypt_init(this.zuc_ctx, key, iv) != 1) {
+			throw new GmSSLException("");
 		}
 
-		this.do_encrypt = do_encrypt;
 		this.inited = true;
 	}
 
@@ -69,14 +61,8 @@ public class Sm4Cbc {
 		}
 
 		int outlen;
-		if (this.do_encrypt) {
-			if ((outlen = GmSSLJNI.sm4_cbc_encrypt_update(this.sm4_cbc_ctx, in, in_offset, inlen, out, out_offset)) < 0) {
-				throw new GmSSLException("");
-			}
-		} else {
-			if ((outlen = GmSSLJNI.sm4_cbc_decrypt_update(this.sm4_cbc_ctx, in, in_offset, inlen, out, out_offset)) < 0) {
-				throw new GmSSLException("");
-			}
+		if ((outlen = GmSSLJNI.zuc_encrypt_update(this.zuc_ctx, in, in_offset, inlen, out, out_offset)) < 0) {
+			throw new GmSSLException("");
 		}
 
 		return outlen;
@@ -95,14 +81,8 @@ public class Sm4Cbc {
 		}
 
 		int outlen;
-		if (this.do_encrypt) {
-			if ((outlen = GmSSLJNI.sm4_cbc_encrypt_finish(this.sm4_cbc_ctx, out, out_offset)) < 0) {
-				throw new GmSSLException("");
-			}
-		} else {
-			if ((outlen = GmSSLJNI.sm4_cbc_decrypt_finish(this.sm4_cbc_ctx, out, out_offset)) < 0) {
-				throw new GmSSLException("");
-			}
+		if ((outlen = GmSSLJNI.zuc_encrypt_finish(this.zuc_ctx, out, out_offset)) < 0) {
+			throw new GmSSLException("");
 		}
 
 		this.inited = false;

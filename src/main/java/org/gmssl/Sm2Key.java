@@ -9,75 +9,187 @@
 
 package org.gmssl;
 
+
 public class Sm2Key {
 
 	public final static int MAX_PLAINTEXT_SIZE = GmSSLJNI.SM2_MAX_PLAINTEXT_SIZE;
-	public static final int NOT_INITED = 0;
-	public static final int PUBLIC_KEY = 1;
-	public static final int PRIVATE_KEY = 3;
 
 	private long sm2_key = 0;
-	private int state = 0;
+	private boolean has_private_key = false;
 
 	public Sm2Key() {
-		state = NOT_INITED;
+		this.sm2_key = 0;
 	}
 
-	public Sm2Key(long key, int state) {
-		sm2_key = key;
-		this.state = state;
+	public Sm2Key(long sm2_key, boolean has_private_key) {
+		this.sm2_key = sm2_key;
+		this.has_private_key = has_private_key;
+	}
+
+	public long getPrivateKey() {
+		if (this.sm2_key == 0) {
+			throw new GmSSLException("");
+		}
+		if (this.has_private_key == false) {
+			throw new GmSSLException("");
+		}
+		return this.sm2_key;
+	}
+
+	public long getPublicKey() {
+		if (this.sm2_key == 0) {
+			throw new GmSSLException("");
+		}
+		return this.sm2_key;
 	}
 
 	public void generateKey() {
-		sm2_key = GmSSLJNI.sm2_key_generate();
-		state = PRIVATE_KEY;
-	}
-
-	public long getKey() {
-		return sm2_key;
-	}
-
-	public void exportEncryptedPrivateKeyInfoPem(String pass, String file) {
-		if (state != PRIVATE_KEY) {
-			throw new GmSSLJNIException("Private key not initialized");
+		if (this.sm2_key != 0) {
+			GmSSLJNI.sm2_key_free(this.sm2_key);
 		}
-		GmSSLJNI.sm2_private_key_info_encrypt_to_pem(sm2_key, pass, file);
+		if ((sm2_key = GmSSLJNI.sm2_key_generate()) == 0) {
+			throw new GmSSLException("");
+		}
+		this.has_private_key = true;
+	}
+
+	public void importPrivateKeyInfoDer(byte[] der) {
+		if (der == null) {
+			throw new GmSSLException("");
+		}
+		if (this.sm2_key != 0) {
+			GmSSLJNI.sm2_key_free(this.sm2_key);
+		}
+		if ((this.sm2_key = GmSSLJNI.sm2_private_key_info_from_der(der)) == 0) {
+			throw new GmSSLException("");
+		}
+		this.has_private_key = true;
+	}
+
+	public byte[] exportPrivateKeyInfoDer() {
+		if (this.sm2_key == 0) {
+			throw new GmSSLException("");
+		}
+		if (this.has_private_key == false) {
+			throw new GmSSLException("");
+		}
+		byte[] der;
+		if ((der = GmSSLJNI.sm2_private_key_info_to_der(this.sm2_key)) == null) {
+			throw new GmSSLException("");
+		}
+		return der;
+	}
+
+	public void importPublicKeyInfoDer(byte[] der) {
+		if (der == null) {
+			throw new GmSSLException("");
+		}
+		if (this.sm2_key != 0) {
+			GmSSLJNI.sm2_key_free(this.sm2_key);
+		}
+		if ((this.sm2_key = GmSSLJNI.sm2_public_key_info_from_der(der)) == 0) {
+			throw new GmSSLException("");
+		}
+		this.has_private_key = false;
+	}
+
+	public byte[] exportPublicKeyInfoDer() {
+		if (this.sm2_key == 0) {
+			throw new GmSSLException("");
+		}
+		byte[] der;
+		if ((der = GmSSLJNI.sm2_public_key_info_to_der(this.sm2_key)) == null) {
+			throw new GmSSLException("");
+		}
+		return der;
 	}
 
 	public void importEncryptedPrivateKeyInfoPem(String pass, String file) {
-		sm2_key = GmSSLJNI.sm2_private_key_info_decrypt_from_pem(pass, file);
-		if (sm2_key == 0) {
-			throw new GmSSLJNIException("Import failure");
+		if (this.sm2_key != 0) {
+			GmSSLJNI.sm2_key_free(this.sm2_key);
 		}
+		if ((sm2_key = GmSSLJNI.sm2_private_key_info_decrypt_from_pem(pass, file)) == 0) {
+			throw new GmSSLException("");
+		}
+		this.has_private_key = true;
 	}
 
-	public void exportPublicKeyInfoPem(String file) {
-		if (state != PRIVATE_KEY && state != PUBLIC_KEY) {
-			throw new GmSSLJNIException("Public key not initialized");
+	public void exportEncryptedPrivateKeyInfoPem(String pass, String file) {
+		if (this.sm2_key == 0) {
+			throw new GmSSLException("");
 		}
-		GmSSLJNI.sm2_public_key_info_to_pem(sm2_key, file);
+		if (this.has_private_key == false) {
+			throw new GmSSLException("");
+		}
+		if (GmSSLJNI.sm2_private_key_info_encrypt_to_pem(this.sm2_key, pass, file) != 1) {
+			throw new GmSSLException("");
+		}
 	}
 
 	public void importPublicKeyInfoPem(String file) {
-		sm2_key = GmSSLJNI.sm2_public_key_info_from_pem(file);
-		if (sm2_key == 0) {
-			throw new GmSSLJNIException("Import failure");
+		if (this.sm2_key != 0) {
+			GmSSLJNI.sm2_key_free(this.sm2_key);
+		}
+		if ((this.sm2_key = GmSSLJNI.sm2_public_key_info_from_pem(file)) == 0) {
+			throw new GmSSLException("");
+		}
+		this.has_private_key = false;
+	}
+
+	public void exportPublicKeyInfoPem(String file) {
+		if (this.sm2_key == 0) {
+			throw new GmSSLException("");
+		}
+		if (GmSSLJNI.sm2_public_key_info_to_pem(this.sm2_key, file) != 1) {
+			throw new GmSSLException("");
 		}
 	}
 
 	public byte[] computeZ(String id) {
+		if (this.sm2_key == 0) {
+			throw new GmSSLException("");
+		}
 		byte[] z = new byte[Sm3.DIGEST_SIZE];
-		GmSSLJNI.sm2_compute_z(sm2_key, id, z);
+		if (GmSSLJNI.sm2_compute_z(this.sm2_key, id, z) != 1) {
+			throw new GmSSLException("");
+		}
 		return z;
 	}
 
 	public byte[] sign(byte[] dgst) {
-		return GmSSLJNI.sm2_sign(sm2_key, dgst);
+		if (this.sm2_key == 0) {
+			throw new GmSSLException("");
+		}
+		if (this.has_private_key == false) {
+			throw new GmSSLException("");
+		}
+
+		if (dgst == null || dgst.length != Sm3.DIGEST_SIZE) {
+			throw new GmSSLException("");
+		}
+
+		byte[] sig;
+		if ((sig = GmSSLJNI.sm2_sign(this.sm2_key, dgst)) == null) {
+			throw new GmSSLException("");
+		}
+		return sig;
 	}
 
 	public boolean verify(byte[] dgst, byte[] signature) {
-		int ret = GmSSLJNI.sm2_verify(sm2_key, dgst, signature);
-		if (ret == 1) {
+		if (this.sm2_key == 0) {
+			throw new GmSSLException("");
+		}
+		if (dgst == null
+			|| dgst.length != Sm3.DIGEST_SIZE
+			|| signature == null) {
+			throw new GmSSLException("");
+		}
+
+		int ret;
+		if ((ret = GmSSLJNI.sm2_verify(this.sm2_key, dgst, signature)) < 0) {
+			throw new GmSSLException("");
+		}
+		if (ret > 0) {
 			return true;
 		} else {
 			return false;
@@ -85,10 +197,36 @@ public class Sm2Key {
 	}
 
 	public byte[] encrypt(byte[] plaintext) {
-		return GmSSLJNI.sm2_encrypt(sm2_key, plaintext);
+		if (this.sm2_key == 0) {
+			throw new GmSSLException("");
+		}
+		if (plaintext == null
+			|| plaintext.length > this.MAX_PLAINTEXT_SIZE) {
+			throw new GmSSLException("");
+		}
+
+		byte[] ciphertext;
+		if ((ciphertext = GmSSLJNI.sm2_encrypt(this.sm2_key, plaintext)) == null) {
+			throw new GmSSLException("");
+		}
+		return ciphertext;
 	}
 
 	public byte[] decrypt(byte[] ciphertext) {
-		return GmSSLJNI.sm2_decrypt(sm2_key, ciphertext);
+		if (this.sm2_key == 0) {
+			throw new GmSSLException("");
+		}
+		if (this.has_private_key == false) {
+			throw new GmSSLException("");
+		}
+		if (ciphertext == null) {
+			throw new GmSSLException("");
+		}
+
+		byte[] plaintext;
+		if ((plaintext = GmSSLJNI.sm2_decrypt(this.sm2_key, ciphertext)) == null) {
+			throw new GmSSLException("");
+		}
+		return plaintext;
 	}
 }

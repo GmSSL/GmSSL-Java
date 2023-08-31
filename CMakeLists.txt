@@ -21,13 +21,14 @@ add_jar(GmSSLJNI
 	GENERATE_NATIVE_HEADERS
 	OUTPUT_DIR ${CMAKE_CURRENT_BINARY_DIR}
 	SOURCES src/main/java/org/gmssl/GmSSLJNI.java
-		src/main/java/org/gmssl/GmSSLJNIException.java
+		src/main/java/org/gmssl/GmSSLException.java
 		src/main/java/org/gmssl/Sm3.java
 		src/main/java/org/gmssl/Sm3Hmac.java
 		src/main/java/org/gmssl/Sm4.java
 		src/main/java/org/gmssl/Sm4Cbc.java
 		src/main/java/org/gmssl/Sm4Ctr.java
 		src/main/java/org/gmssl/Sm4Gcm.java
+		src/main/java/org/gmssl/Zuc.java
 		src/main/java/org/gmssl/Sm2Key.java
 		src/main/java/org/gmssl/Sm2Signature.java
 		src/main/java/org/gmssl/Sm9EncKey.java

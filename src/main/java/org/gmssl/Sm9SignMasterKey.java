@@ -9,54 +9,95 @@
 
 package org.gmssl;
 
+
 public class Sm9SignMasterKey {
 
-	public static final int NOT_INITED = 0;
-	public static final int PUBLIC_KEY = 1;
-	public static final int PRIVATE_KEY = 3;
-
 	private long master_key = 0;
-	private int state = 0;
+	private boolean has_private_key = false;
 
 	public Sm9SignMasterKey() {
-		state = NOT_INITED;
+		this.master_key = 0;
 	}
 
 	public void generateMasterKey() {
-		master_key = GmSSLJNI.sm9_sign_master_key_generate();
-		state = PRIVATE_KEY;
+		if (this.master_key != 0) {
+			GmSSLJNI.sm9_sign_master_key_free(this.master_key);
+		}
+		if ((this.master_key = GmSSLJNI.sm9_sign_master_key_generate()) == 0) {
+			throw new GmSSLException("");
+		}
+		this.has_private_key = true;
 	}
 
 	public long getMasterKey() {
-		return master_key;
+		if (this.master_key == 0) {
+			throw new GmSSLException("");
+		}
+		if (this.has_private_key == false) {
+			throw new GmSSLException("");
+		}
+		return this.master_key;
+	}
+
+	public long getPublicMasterKey() {
+		if (this.master_key == 0) {
+			throw new GmSSLException("");
+		}
+		return this.master_key;
 	}
 
 	public Sm9SignKey extractKey(String id) {
-		long key = GmSSLJNI.sm9_sign_master_key_extract_key(master_key, id);
+		if (this.master_key == 0) {
+			throw new GmSSLException("");
+		}
+		if (this.has_private_key == false) {
+			throw new GmSSLException("");
+		}
+		long key;
+		if ((key = GmSSLJNI.sm9_sign_master_key_extract_key(this.master_key, id)) == 0) {
+			throw new GmSSLException("");
+		}
 		return new Sm9SignKey(key, id);
 	}
 
 	public void importEncryptedMasterKeyInfoPem(String pass, String file) {
-		master_key = GmSSLJNI.sm9_sign_master_key_info_decrypt_from_pem(pass, file);
-		state = PRIVATE_KEY;
+		if (this.master_key != 0) {
+			GmSSLJNI.sm9_sign_master_key_free(this.master_key);
+		}
+		if ((this.master_key = GmSSLJNI.sm9_sign_master_key_info_decrypt_from_pem(pass, file)) == 0) {
+			throw new GmSSLException("");
+		}
+		this.has_private_key = true;
 	}
 
 	public void exportEncryptedMasterKeyInfoPem(String pass, String file) {
-		if (state != PRIVATE_KEY && state != PUBLIC_KEY) {
-			throw new GmSSLJNIException("Private master key not initialized");
+		if (this.master_key == 0) {
+			throw new GmSSLException("");
 		}
-		GmSSLJNI.sm9_sign_master_key_info_encrypt_to_pem(master_key, pass, file);
+		if (this.has_private_key == false) {
+			throw new GmSSLException("");
+		}
+		if (GmSSLJNI.sm9_sign_master_key_info_encrypt_to_pem(this.master_key, pass, file) != 1) {
+			throw new GmSSLException("");
+		}
 	}
 
 	public void importPublicMasterKeyPem(String file) {
-		master_key = GmSSLJNI.sm9_sign_master_public_key_from_pem(file);
-		state = PUBLIC_KEY;
+		if (this.master_key != 0) {
+			GmSSLJNI.sm9_sign_master_key_free(this.master_key);
+		}
+		if ((this.master_key = GmSSLJNI.sm9_sign_master_public_key_from_pem(file)) == 0) {
+			throw new GmSSLException("");
+		}
+		this.has_private_key = false;
 	}
 
 	public void exportPublicMasterKeyPem(String file) {
-		if (state != PRIVATE_KEY && state != PUBLIC_KEY) {
-			throw new GmSSLJNIException("Private master key not initialized");
+		if (this.master_key == 0) {
+			throw new GmSSLException("");
 		}
-		GmSSLJNI.sm9_sign_master_public_key_to_pem(master_key, file);
+		if (GmSSLJNI.sm9_sign_master_public_key_to_pem(this.master_key, file) != 1) {
+			throw new GmSSLException("");
+		}
 	}
 }

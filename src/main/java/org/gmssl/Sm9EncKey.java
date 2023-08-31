@@ -14,30 +14,50 @@ public class Sm9EncKey {
 	private long sm9_enc_key = 0;
 	private String id;
 
-	public Sm9EncKey(String id) {
-		this.id = id;
-	}
-
 	public Sm9EncKey(long key, String id) {
 		this.sm9_enc_key = key;
 		this.id = id;
 	}
 
+	public Sm9EncKey(String id) {
+		this.sm9_enc_key = 0;
+		this.id = id;
+	}
+
 	public void importEncryptedPrivateKeyInfoPem(String pass, String file) {
-		sm9_enc_key = GmSSLJNI.sm9_enc_key_info_decrypt_from_pem(pass, file);
-		if (sm9_enc_key == 0) {
-			throw new GmSSLJNIException("Import key failure");
+		if (this.sm9_enc_key != 0) {
+			GmSSLJNI.sm9_enc_key_free(this.sm9_enc_key);
+		}
+		if ((this.sm9_enc_key = GmSSLJNI.sm9_enc_key_info_decrypt_from_pem(pass, file)) == 0) {
+			throw new GmSSLException("");
 		}
 	}
 
 	public void exportEncryptedPrivateKeyInfoPem(String pass, String file) {
-		if (sm9_enc_key == 0) {
-			throw new GmSSLJNIException("Key not initialized");
+		if (this.sm9_enc_key == 0) {
+			throw new GmSSLException("Key not initialized");
 		}
-		GmSSLJNI.sm9_enc_key_info_encrypt_to_pem(sm9_enc_key, pass, file);
+		if (GmSSLJNI.sm9_enc_key_info_encrypt_to_pem(this.sm9_enc_key, pass, file) != 1) {
+			throw new GmSSLException("");
+		}
+	}
+
+	public String getId() {
+		return this.id;
 	}
 
 	public byte[] decrypt(byte[] ciphertext) {
-		return GmSSLJNI.sm9_decrypt(sm9_enc_key, id, ciphertext);
+		if (this.sm9_enc_key == 0) {
+			throw new GmSSLException("");
+		}
+		if (ciphertext == null) {
+			throw new GmSSLException("");
+		}
+
+		byte[] plaintext;
+		if ((plaintext = GmSSLJNI.sm9_decrypt(this.sm9_enc_key, this.id, ciphertext)) == null) {
+			throw new GmSSLException("");
+		}
+		return plaintext;
 	}
 }

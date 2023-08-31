@@ -9,9 +9,9 @@
 
 package org.gmssl;
 
-public class GmSSLJNIException extends RuntimeException {
+public class GmSSLException extends RuntimeException {
 
-	public GmSSLJNIException(String reason) {
+	public GmSSLException(String reason) {
 		super(reason);
 	}
 

@@ -12,48 +12,103 @@ package org.gmssl;
 public class Sm2Signature {
 
 	public final static String DEFAULT_ID = GmSSLJNI.SM2_DEFAULT_ID;
-	public final static int SIGN = 0;
-	public final static int VERIFY = 1;
 
 	private long sm2_sign_ctx = 0;
-	private int mode = 0;
+	private boolean inited = false;
+	private boolean do_sign = true;
 
-	public Sm2Signature(Sm2Key key, String id, int opmode) {
-		sm2_sign_ctx = GmSSLJNI.sm2_sign_ctx_new();
-		mode = opmode;
-		if (mode == SIGN) {
-			GmSSLJNI.sm2_sign_init(sm2_sign_ctx, key.getKey(), id);
-		} else {
-			GmSSLJNI.sm2_verify_init(sm2_sign_ctx, key.getKey(), id);
+	public Sm2Signature(Sm2Key key, String id, boolean do_sign) {
+
+		if ((this.sm2_sign_ctx = GmSSLJNI.sm2_sign_ctx_new()) == 0) {
+			throw new GmSSLException("");
 		}
+
+		if (do_sign == true) {
+			if (GmSSLJNI.sm2_sign_init(this.sm2_sign_ctx, key.getPrivateKey(), id) != 1) {
+				throw new GmSSLException("");
+			}
+		} else {
+			if (GmSSLJNI.sm2_verify_init(sm2_sign_ctx, key.getPublicKey(), id) != 1) {
+				throw new GmSSLException("");
+			}
+		}
+
+		this.inited = true;
+		this.do_sign = do_sign;
+	}
+
+	public void reset(Sm2Key key, String id, boolean do_sign) {
+		if (do_sign == true) {
+			if (GmSSLJNI.sm2_sign_init(this.sm2_sign_ctx, key.getPrivateKey(), id) != 1) {
+				throw new GmSSLException("");
+			}
+		} else {
+			if (GmSSLJNI.sm2_verify_init(sm2_sign_ctx, key.getPublicKey(), id) != 1) {
+				throw new GmSSLException("");
+			}
+		}
+		this.inited = true;
+		this.do_sign = do_sign;
 	}
 
 	public void update(byte[] data, int offset, int len) {
-		if (mode == SIGN) {
-			GmSSLJNI.sm2_sign_update(sm2_sign_ctx, data, offset, len);
+
+		if (this.inited == false) {
+			throw new GmSSLException("");
+		}
+
+		if (data == null
+			|| offset < 0
+			|| len < 0
+			|| offset + len <= 0
+			|| data.length < offset + len) {
+			throw new GmSSLException("");
+		}
+
+		if (this.do_sign == true) {
+			if (GmSSLJNI.sm2_sign_update(this.sm2_sign_ctx, data, offset, len) != 1) {
+				throw new GmSSLException("");
+			}
 		} else {
-			GmSSLJNI.sm2_verify_update(sm2_sign_ctx, data, offset, len);
+			if (GmSSLJNI.sm2_verify_update(this.sm2_sign_ctx, data, offset, len) != 1) {
+				throw new GmSSLException("");
+			}
 		}
 	}
 
 	public void update(byte[] data) {
-		if (mode == SIGN) {
-			GmSSLJNI.sm2_sign_update(sm2_sign_ctx, data, 0, data.length);
-		} else {
-			GmSSLJNI.sm2_verify_update(sm2_sign_ctx, data, 0, data.length);
-		}
+		update(data, 0, data.length);
 	}
 
 	public byte[] sign() {
-		return GmSSLJNI.sm2_sign_finish(sm2_sign_ctx);
+		if (this.inited == false) {
+			throw new GmSSLException("");
+		}
+		if (this.do_sign == false) {
+			throw new GmSSLException("");
+		}
+		this.inited = false;
+
+		byte[] sig;
+		if ((sig = GmSSLJNI.sm2_sign_finish(this.sm2_sign_ctx)) == null) {
+			throw new GmSSLException("");
+		}
+		return sig;
 	}
 
 	public boolean verify(byte[] signature) {
-		int ret = GmSSLJNI.sm2_verify_finish(sm2_sign_ctx, signature);
-		if (ret == 1) {
-			return true;
-		} else {
+		if (this.sm2_sign_ctx == 0) {
+			throw new GmSSLException("");
+		}
+		if (this.do_sign == true) {
+			throw new GmSSLException("");
+		}
+		this.inited = false;
+
+		int ret;
+		if ((ret = GmSSLJNI.sm2_verify_finish(sm2_sign_ctx, signature)) != 1) {
 			return false;
 		}
+		return true;
 	}
 }
