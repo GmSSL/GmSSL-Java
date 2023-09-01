@@ -2,6 +2,8 @@
 all:
 	javac -cp ../build/GmSSLJNI.jar HelloGmSSLJNI.java
 	java -Djava.library.path=../build -cp ../build/GmSSLJNI.jar:. HelloGmSSLJNI
+	javac -cp ../build/GmSSLJNI.jar Sm3Example.java
+	java -Djava.library.path=../build -cp ../build/GmSSLJNI.jar:. Sm3Example
 	javac -cp ../build/GmSSLJNI.jar Sm3HmacExample.java
 	java -Djava.library.path=../build -cp ../build/GmSSLJNI.jar:. Sm3HmacExample
 	javac -cp ../build/GmSSLJNI.jar Sm4Example.java
@@ -14,6 +16,10 @@ all:
 	java -Djava.library.path=../build -cp ../build/GmSSLJNI.jar:. Sm4GcmExample
 	javac -cp ../build/GmSSLJNI.jar ZucExample.java
 	java -Djava.library.path=../build -cp ../build/GmSSLJNI.jar:. ZucExample
+	javac -cp ../build/GmSSLJNI.jar Sm2Example.java
+	java -Djava.library.path=../build -cp ../build/GmSSLJNI.jar:. Sm2Example
+	javac -cp ../build/GmSSLJNI.jar Sm9Example.java
+	java -Djava.library.path=../build -cp ../build/GmSSLJNI.jar:. Sm9Example
 
 clean:
 	rm -fr *.class

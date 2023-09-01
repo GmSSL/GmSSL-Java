@@ -13,6 +13,7 @@ package org.gmssl;
 public class Sm2Key {
 
 	public final static int MAX_PLAINTEXT_SIZE = GmSSLJNI.SM2_MAX_PLAINTEXT_SIZE;
+	public final static String DEFAULT_ID = GmSSLJNI.SM2_DEFAULT_ID;
 
 	private long sm2_key = 0;
 	private boolean has_private_key = false;
