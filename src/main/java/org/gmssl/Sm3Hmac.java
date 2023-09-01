@@ -11,7 +11,7 @@ package org.gmssl;
 
 public class Sm3Hmac {
 
-	public final static int HMAC_SIZE = GmSSLJNI.SM3_HMAC_SIZE;
+	public final static int MAC_SIZE = GmSSLJNI.SM3_HMAC_SIZE;
 
 	private byte[] key;
 
@@ -57,8 +57,8 @@ public class Sm3Hmac {
 		this.update(data, 0, data.length);
 	}
 
-	public byte[] doFinal() {
-		byte[] mac = new byte[HMAC_SIZE];
+	public byte[] generateMac() {
+		byte[] mac = new byte[this.MAC_SIZE];
 		if (GmSSLJNI.sm3_hmac_finish(this.sm3_hmac_ctx, mac) != 1) {
 			throw new GmSSLException("");
 		}

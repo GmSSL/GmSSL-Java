@@ -64,7 +64,6 @@ public class Sm4Ctr {
 		if ((outlen = GmSSLJNI.sm4_ctr_encrypt_update(this.sm4_ctr_ctx, in, in_offset, inlen, out, out_offset)) < 0) {
 			throw new GmSSLException("");
 		}
-
 		return outlen;
 	}
 
@@ -84,7 +83,6 @@ public class Sm4Ctr {
 		if ((outlen = GmSSLJNI.sm4_ctr_encrypt_finish(this.sm4_ctr_ctx, out, out_offset)) < 0) {
 			throw new GmSSLException("");
 		}
-
 		this.inited = false;
 		return outlen;
 	}

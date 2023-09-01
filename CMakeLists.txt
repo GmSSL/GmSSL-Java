@@ -22,6 +22,7 @@ add_jar(GmSSLJNI
 	OUTPUT_DIR ${CMAKE_CURRENT_BINARY_DIR}
 	SOURCES src/main/java/org/gmssl/GmSSLJNI.java
 		src/main/java/org/gmssl/GmSSLException.java
+		src/main/java/org/gmssl/Random.java
 		src/main/java/org/gmssl/Sm3.java
 		src/main/java/org/gmssl/Sm3Hmac.java
 		src/main/java/org/gmssl/Sm4.java

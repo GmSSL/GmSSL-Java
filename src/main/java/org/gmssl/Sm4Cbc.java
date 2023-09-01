@@ -14,6 +14,7 @@ public class Sm4Cbc {
 
 	public final static int KEY_SIZE = GmSSLJNI.SM4_KEY_SIZE;
 	public final static int IV_SIZE = GmSSLJNI.SM4_BLOCK_SIZE;
+	public final static int BLOCK_SIZE = GmSSLJNI.SM4_BLOCK_SIZE;
 
 	private long sm4_cbc_ctx = 0;
 	private boolean do_encrypt = true;
