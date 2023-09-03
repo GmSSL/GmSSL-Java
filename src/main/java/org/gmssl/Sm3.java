@@ -9,7 +9,7 @@
 
 package org.gmssl;
 
-public class Sm3 {
+public class Sm3 implements AutoCloseable{
 
 	public final static int DIGEST_SIZE = GmSSLJNI.SM3_DIGEST_SIZE;
 
@@ -56,5 +56,10 @@ public class Sm3 {
 			throw new GmSSLException("");
 		}
 		return dgst;
+	}
+
+	@Override
+	public void close() throws Exception {
+		GmSSLJNI.sm3_ctx_free(sm3_ctx);
 	}
 }
