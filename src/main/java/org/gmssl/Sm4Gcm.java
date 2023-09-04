@@ -18,6 +18,7 @@ public class Sm4Gcm {
 	public final static int DEFAULT_IV_SIZE = GmSSLJNI.SM4_GCM_DEFAULT_IV_SIZE;
 	public final static int MIN_TAG_SIZE = 8;
 	public final static int MAX_TAG_SIZE = GmSSLJNI.SM4_GCM_MAX_TAG_SIZE;
+	public final static int BLOCK_SIZE = GmSSLJNI.SM4_BLOCK_SIZE;
 
 	private long sm4_gcm_ctx = 0;
 	private boolean do_encrypt = true;

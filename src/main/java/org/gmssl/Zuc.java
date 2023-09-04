@@ -14,6 +14,7 @@ public class Zuc {
 
 	public final static int KEY_SIZE = GmSSLJNI.ZUC_KEY_SIZE;
 	public final static int IV_SIZE = GmSSLJNI.ZUC_IV_SIZE;
+	public final static int BLOCK_SIZE = 4;
 
 	private long zuc_ctx = 0;
 	private boolean inited = false;

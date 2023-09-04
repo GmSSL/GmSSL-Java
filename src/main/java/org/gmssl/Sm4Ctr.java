@@ -14,6 +14,7 @@ public class Sm4Ctr {
 
 	public final static int KEY_SIZE = GmSSLJNI.SM4_KEY_SIZE;
 	public final static int IV_SIZE = GmSSLJNI.SM4_BLOCK_SIZE;
+	public final static int BLOCK_SIZE = GmSSLJNI.SM4_BLOCK_SIZE;
 
 	private long sm4_ctr_ctx = 0;
 	private boolean inited = false;
