@@ -9,6 +9,7 @@
 
 import org.gmssl.Sm4;
 import org.gmssl.Random;
+import java.util.Arrays;
 
 public class Sm4Example {
 
@@ -46,5 +47,7 @@ public class Sm4Example {
 			System.out.printf("%02x", plaintext2[i]);
 		}
 		System.out.print("\n");
+
+		System.out.println("Decryption success : " + Arrays.equals(plaintext1, plaintext2));
 	}
 }

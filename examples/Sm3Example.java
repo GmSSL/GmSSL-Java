@@ -14,7 +14,7 @@ public class Sm3Example {
 	public static void main(String[] args) {
 
 		Sm3 sm3 = new Sm3();
-		sm3.update("abc".getBytes(), 0, 3);
+		sm3.update("abc".getBytes());
 		byte[] dgst = sm3.digest();
 
 		int i;

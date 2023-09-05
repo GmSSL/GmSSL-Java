@@ -17,7 +17,7 @@ public class Sm4GcmExample {
 		Random rng = new Random();
 		byte[] key = rng.randBytes(Sm4Gcm.KEY_SIZE);
 		byte[] iv = rng.randBytes(Sm4Gcm.DEFAULT_IV_SIZE);
-		byte[] aad = rng.randBytes(8);
+		byte[] aad = "Hello: ".getBytes();
 		int taglen = Sm4Gcm.MAX_TAG_SIZE;
 		byte[] ciphertext = new byte[64];
 		byte[] plaintext = new byte[64];
