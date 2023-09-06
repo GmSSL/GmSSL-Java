@@ -205,11 +205,11 @@ HMAC-SM3是基于SM3密码杂凑算法的消息认证码(MAC)算法，消息认�
 public class Sm3Hmac {
 	public final static int MAC_SIZE = 32;
 
-  public Sm3Hmac(byte[] key);
+	public Sm3Hmac(byte[] key);
 	public void reset(byte[] key);
 	public void update(byte[] data, int offset, int len);
-  public void update(byte[] data);
-  public byte[] generateMac();
+	public void update(byte[] data);
+	public byte[] generateMac();
 }
 ```
 
