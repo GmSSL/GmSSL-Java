@@ -9,11 +9,11 @@
 
 package org.gmssl;
 
-public class Certificate {
+public class Sm2Certificate {
 
 	private byte[] cert = null;
 
-	public Certificate() {
+	public Sm2Certificate() {
 		this.cert = null;
 	}
 
@@ -98,7 +98,7 @@ public class Certificate {
 		return new Sm2Key(pub_key, has_private_key);
 	}
 
-	public boolean verifyByCaCertificate(Certificate caCert, String sm2Id) {
+	public boolean verifyByCaCertificate(Sm2Certificate caCert, String sm2Id) {
 		if (this.cert == null) {
 			throw new GmSSLException("");
 		}

@@ -15,39 +15,68 @@ import org.gmssl.Random;
 public class Sm2Example {
 
 	public static void main(String[] args) {
+		int i;
 
 		Sm2Key sm2_key = new Sm2Key();
 
 		sm2_key.generateKey();
 
-		byte[] z = sm2_key.computeZ(Sm2Key.DEFAULT_ID);
+		byte[] privateKeyInfo = sm2_key.exportPrivateKeyInfoDer();
+		System.out.printf("PrivateKeyInfo: ");
+		for (i = 0; i < privateKeyInfo.length; i++) {
+			System.out.printf("%02x", privateKeyInfo[i]);
+		}
+		System.out.print("\n");
 
-		int i;
+		byte[] publicKeyInfo = sm2_key.exportPublicKeyInfoDer();
+		System.out.printf("PrivateKeyInfo: ");
+		for (i = 0; i < publicKeyInfo.length; i++) {
+			System.out.printf("%02x", publicKeyInfo[i]);
+		}
+		System.out.print("\n");
+
+
+		Sm2Key priKey = new Sm2Key();
+		priKey.importPrivateKeyInfoDer(privateKeyInfo);
+
+		Sm2Key pubKey = new Sm2Key();
+		pubKey.importPublicKeyInfoDer(publicKeyInfo);
+
+		priKey.exportEncryptedPrivateKeyInfoPem("Password", "sm2.pem");
+		pubKey.exportPublicKeyInfoPem("sm2pub.pem");
+
+		priKey.importEncryptedPrivateKeyInfoPem("Password", "sm2.pem");
+		pubKey.importPublicKeyInfoPem("sm2pub.pem");
+
+
+		byte[] z = pubKey.computeZ(Sm2Key.DEFAULT_ID);
+
 		System.out.printf("Z: ");
 		for (i = 0; i < z.length; i++) {
 			System.out.printf("%02x", z[i]);
 		}
 		System.out.print("\n");
 
+
 		Random rng = new Random();
 		byte[] dgst = rng.randBytes(Sm3.DIGEST_SIZE);
-		byte[] sig = sm2_key.sign(dgst);
-		boolean verify_ret = sm2_key.verify(dgst, sig);
+		byte[] sig = priKey.sign(dgst);
+		boolean verify_ret = pubKey.verify(dgst, sig);
 		System.out.println("Verify result = " + verify_ret);
 
-		byte[] ciphertext = sm2_key.encrypt("abc".getBytes());
-		byte[] plaintext = sm2_key.decrypt(ciphertext);
+		byte[] ciphertext = pubKey.encrypt("abc".getBytes());
+		byte[] plaintext = priKey.decrypt(ciphertext);
 		System.out.printf("Plaintext : ");
 		for (i = 0; i < plaintext.length; i++) {
 			System.out.printf("%02x", plaintext[i]);
 		}
 		System.out.print("\n");
 
-		Sm2Signature sign = new Sm2Signature(sm2_key, Sm2Key.DEFAULT_ID, true);
+		Sm2Signature sign = new Sm2Signature(priKey, Sm2Key.DEFAULT_ID, true);
 		sign.update("abc".getBytes());
 		sig = sign.sign();
 
-		Sm2Signature verify = new Sm2Signature(sm2_key, Sm2Key.DEFAULT_ID, false);
+		Sm2Signature verify = new Sm2Signature(pubKey, Sm2Key.DEFAULT_ID, false);
 		verify.update("abc".getBytes());
 		verify_ret = verify.verify(sig);
 		System.out.println("Verify result = " + verify_ret);

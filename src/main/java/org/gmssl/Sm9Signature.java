@@ -97,7 +97,7 @@ public class Sm9Signature {
 			throw new GmSSLException("");
 		}
 		int ret;
-		ret = GmSSLJNI.sm9_verify_finish(sm9_sign_ctx, signature, masterPublicKey.getMasterKey(), id);
+		ret = GmSSLJNI.sm9_verify_finish(sm9_sign_ctx, signature, masterPublicKey.getPublicMasterKey(), id);
 		this.inited = false;
 		if (ret == 1) {
 			return true;

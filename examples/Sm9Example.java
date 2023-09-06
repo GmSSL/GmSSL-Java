@@ -27,15 +27,23 @@ public class Sm9Example {
 		sign.update("abc".getBytes());
 		byte[] sig = sign.sign(sign_key);
 
+		sign_master_key.exportPublicMasterKeyPem("sm9sign.mpk");
+		Sm9SignMasterKey sign_master_pub_key = new Sm9SignMasterKey();
+		sign_master_pub_key.importPublicMasterKeyPem("sm9sign.mpk");
+
 		Sm9Signature verify = new Sm9Signature(false);
 		verify.update("abc".getBytes());
-		boolean verify_ret = verify.verify(sig, sign_master_key, "Alice");
+		boolean verify_ret = verify.verify(sig, sign_master_pub_key, "Alice");
 		System.out.println("Verify result = " + verify_ret);
 
 		Sm9EncMasterKey enc_master_key = new Sm9EncMasterKey();
 		enc_master_key.generateMasterKey();
 
-		byte[] ciphertext = enc_master_key.encrypt("abc".getBytes(), "Bob");
+		enc_master_key.exportPublicMasterKeyPem("sm9enc.mpk");
+		Sm9EncMasterKey enc_master_pub_key = new Sm9EncMasterKey();
+		enc_master_pub_key.importPublicMasterKeyPem("sm9enc.mpk");
+
+		byte[] ciphertext = enc_master_pub_key.encrypt("abc".getBytes(), "Bob");
 
 		Sm9EncKey enc_key = enc_master_key.extractKey("Bob");
 		byte[] plaintext = enc_key.decrypt(ciphertext);

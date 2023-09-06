@@ -32,12 +32,12 @@ add_jar(GmSSLJNI
 		src/main/java/org/gmssl/Zuc.java
 		src/main/java/org/gmssl/Sm2Key.java
 		src/main/java/org/gmssl/Sm2Signature.java
-		src/main/java/org/gmssl/Sm9EncKey.java
+		src/main/java/org/gmssl/Sm2Certificate.java
 		src/main/java/org/gmssl/Sm9EncMasterKey.java
-		src/main/java/org/gmssl/Sm9SignKey.java
+		src/main/java/org/gmssl/Sm9EncKey.java
 		src/main/java/org/gmssl/Sm9SignMasterKey.java
+		src/main/java/org/gmssl/Sm9SignKey.java
 		src/main/java/org/gmssl/Sm9Signature.java
-		src/main/java/org/gmssl/Certificate.java
 
 		src/main/java/org/gmssl/jce/GmSSLProvider.java
 		src/main/java/org/gmssl/jce/GmSSLMessageDigest.java
