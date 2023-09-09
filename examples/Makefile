@@ -6,6 +6,8 @@ all:
 	java -Djava.library.path=../build -cp ../build/GmSSLJNI.jar:. Sm3Example
 	javac -cp ../build/GmSSLJNI.jar Sm3HmacExample.java
 	java -Djava.library.path=../build -cp ../build/GmSSLJNI.jar:. Sm3HmacExample
+	javac -cp ../build/GmSSLJNI.jar Sm3Pbkdf2Example.java
+	java -Djava.library.path=../build -cp ../build/GmSSLJNI.jar:. Sm3Pbkdf2Example
 	javac -cp ../build/GmSSLJNI.jar Sm4Example.java
 	java -Djava.library.path=../build -cp ../build/GmSSLJNI.jar:. Sm4Example
 	javac -cp ../build/GmSSLJNI.jar Sm4CbcExample.java

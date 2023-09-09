@@ -139,6 +139,14 @@ JNIEXPORT jint JNICALL Java_org_gmssl_GmSSLJNI_sm3_1hmac_1finish
 
 /*
  * Class:     org_gmssl_GmSSLJNI
+ * Method:    sm3_pbkdf2
+ * Signature: (Ljava/lang/String;[BII)[B
+ */
+JNIEXPORT jbyteArray JNICALL Java_org_gmssl_GmSSLJNI_sm3_1pbkdf2
+  (JNIEnv *, jclass, jstring, jbyteArray, jint, jint);
+
+/*
+ * Class:     org_gmssl_GmSSLJNI
  * Method:    sm4_key_new
  * Signature: ()J
  */

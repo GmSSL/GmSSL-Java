@@ -16,8 +16,15 @@ public class GmSSLJNI {
 	public final static int SM3_DIGEST_SIZE = 32;
 	public final static int SM3_HMAC_SIZE = 32;
 	public final static int SM3_HMAC_MIN_KEY_SIZE = 16;
+	public final static int SM3_PBKDF2_MIN_ITER = 10000; // from <gmssl/pbkdf2.h>
+	public final static int SM3_PBKDF2_MAX_ITER = 16777216; // 2^24
+	public final static int SM3_PBKDF2_MAX_SALT_SIZE = 64; // from <gmssl/pbkdf2.h>
+	public final static int SM3_PBKDF2_DEFAULT_SALT_SIZE = 8; // from <gmssl/pbkdf2.h>
+	public final static int SM3_PBKDF2_MAX_KEY_SIZE = 256; // from gmssljni.c:sm3_pbkdf2():sizeof(keybuf)
 	public final static int SM4_KEY_SIZE = 16;
 	public final static int SM4_BLOCK_SIZE = 16;
+	public final static int SM4_CBC_IV_SIZE = 16;
+	public final static int SM4_CTR_IV_SIZE = 16;
 	public final static int SM4_GCM_MIN_IV_SIZE = 1;
 	public final static int SM4_GCM_MAX_IV_SIZE = 64;
 	public final static int SM4_GCM_DEFAULT_IV_SIZE = 12;
@@ -41,6 +48,7 @@ public class GmSSLJNI {
 	public final static native int sm3_hmac_init(long sm3_hmac_ctx, byte[] key);
 	public final static native int sm3_hmac_update(long sm3_hmac_ctx, byte[] data, int offset, int datalen);
 	public final static native int sm3_hmac_finish(long sm3_hmac_ctx, byte[] hmac);
+	public final static native byte[] sm3_pbkdf2(String pass, byte[] salt, int iter, int keylen);
 	public final static native long sm4_key_new();
 	public final static native void sm4_key_free(long sm4_key);
 	public final static native int sm4_set_encrypt_key(long sm4_key, byte[] key);
@@ -184,6 +192,12 @@ public class GmSSLJNI {
 		sm3_hmac_update(sm3_hmac_ctx, "abc".getBytes(), 0, 3);
 		sm3_hmac_finish(sm3_hmac_ctx, hmac);
 		print_bytes("sm3_hmac('abc')", hmac);
+
+		String password = "P@ssw0rd";
+		byte[] salt = new byte[SM3_PBKDF2_MAX_SALT_SIZE];
+		rand_bytes(salt, 0, salt.length);
+		byte[] derived_key = sm3_pbkdf2(password, salt, SM3_PBKDF2_MIN_ITER, 16);
+		print_bytes("sm2_pbkdf2", derived_key);
 
 		long sm4_key = sm4_key_new();
 		sm4_set_encrypt_key(sm4_key, key);

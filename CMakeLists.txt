@@ -25,6 +25,7 @@ add_jar(GmSSLJNI
 		src/main/java/org/gmssl/Random.java
 		src/main/java/org/gmssl/Sm3.java
 		src/main/java/org/gmssl/Sm3Hmac.java
+		src/main/java/org/gmssl/Sm3Pbkdf2.java
 		src/main/java/org/gmssl/Sm4.java
 		src/main/java/org/gmssl/Sm4Cbc.java
 		src/main/java/org/gmssl/Sm4Ctr.java
