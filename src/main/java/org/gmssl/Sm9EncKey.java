@@ -14,7 +14,7 @@ public class Sm9EncKey {
 	private long sm9_enc_key = 0;
 	private String id;
 
-	public Sm9EncKey(long key, String id) {
+	Sm9EncKey(long key, String id) {
 		this.sm9_enc_key = key;
 		this.id = id;
 	}

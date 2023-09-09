@@ -14,7 +14,7 @@ public class Sm9SignKey {
 	private long sm9_sign_key = 0;
 	private String id;
 
-	public Sm9SignKey(long key, String id) {
+	Sm9SignKey(long key, String id) {
 		this.sm9_sign_key = key;
 		this.id = id;
 	}
@@ -24,7 +24,7 @@ public class Sm9SignKey {
 		this.id = id;
 	}
 
-	public long getKey() {
+	long getKey() {
 		if (this.sm9_sign_key == 0) {
 			throw new GmSSLException("");
 		}

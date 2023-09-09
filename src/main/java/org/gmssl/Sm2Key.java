@@ -22,12 +22,12 @@ public class Sm2Key {
 		this.sm2_key = 0;
 	}
 
-	public Sm2Key(long sm2_key, boolean has_private_key) {
+	Sm2Key(long sm2_key, boolean has_private_key) {
 		this.sm2_key = sm2_key;
 		this.has_private_key = has_private_key;
 	}
 
-	public long getPrivateKey() {
+	long getPrivateKey() {
 		if (this.sm2_key == 0) {
 			throw new GmSSLException("");
 		}
@@ -37,7 +37,7 @@ public class Sm2Key {
 		return this.sm2_key;
 	}
 
-	public long getPublicKey() {
+	long getPublicKey() {
 		if (this.sm2_key == 0) {
 			throw new GmSSLException("");
 		}
