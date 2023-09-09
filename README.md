@@ -8,6 +8,12 @@ GmSSL-Java是采用JNI (Java Native Interface)方式实现的，也就是说所�
 
 因为GmSSL-Java以JNI方式实现，GmSSL-Java不仅包含Java语言实现的Java类库（Jar包），还包括C语言实现的本地库（libgmssljni动态库），其中libgmssljni这个本地库是Java接口类库和GmSSL库(libgmssl)之间的胶水层，应用部署时还需要保证系统中已经安全了GmSSL库。虽然看起来这种实现方式比纯Java实现的类似更麻烦，而且因为包含C编译的本地代码，这个类库也失去了Java代码一次编译到处运行的跨平台能力，但是这是密码库的主流实现方式。相对于纯Java实现来说，GmSSL-Java可以充分利用成熟和功能丰富的GmSSL库，在性能、标准兼容性上都更有优势，并且可以随着GmSSL主项目的升级获得功能和性能上的升级。
 
+## 下载
+
+* GmSSL-Java主分支源代码 [GmSSL-Java-main.zip](https://github.com/GmSSL/GmSSL-Java/archive/refs/heads/main.zip) (版本号：2.1.0 dev)
+* 依赖的GmSSL库主分支源代码 [GmSSL-master.zip](https://github.com/guanzhi/GmSSL/archive/refs/heads/master.zip) (版本号：3.1.1 Dev)]
+* GitHub主页：https://github.com/GmSSL/GmSSL-Java
+
 ## 项目构成
 
 GmSSL的项目组成主要包括C语言的本地代码、`src`目录下的Java类库代码、`examples`目录下面的例子代码。其中只有本地代码和`src`下面的Java类库代码会参与默认的编译，生成动态库和Jar包，而`examples`下的例子默认不编译也不进入Jar包。
@@ -17,10 +23,11 @@ GmSSL-Java提供一个包`org.gmssl`，其中包含如下密码算法类
 * org.gmssl.Random
 * org.gmssl.Sm3
 * org.gmssl.Sm3Hmac
+* org.gmssl.Sm3Pbkdf2
 * org.gmssl.Sm4
+* org.gmssl.Sm4Gcm
 * org.gmssl.Sm4Cbc
 * org.gmssl.Sm4Ctr
-* org.gmssl.Sm4Gcm
 * org.gmssl.Zuc
 * org.gmssl.Sm2Key
 * org.gmssl.Sm2Signature
@@ -238,6 +245,46 @@ public class Sm3HmacExample {
 `Sm3Hmac`也通过`update`方法来提供输入消息，应用可以多次调用`update`。
 
 应用在通过`update`完成数据输入后，调用`generateMac`可以获得消息认证码，HMAC-SM3输出为固定32字节，即`MAC_SIZE`长度的二进制消息认证码。
+
+
+### 基于口令的密钥导出函数 PBKDF2
+
+```java
+public class Sm3Pbkdf2 {
+
+	public final static int MAX_SALT_SIZE = GmSSLJNI.SM3_PBKDF2_MAX_SALT_SIZE;
+	public final static int DEFAULT_SALT_SIZE = GmSSLJNI.SM3_PBKDF2_DEFAULT_SALT_SIZE;
+	public final static int MIN_ITER = GmSSLJNI.SM3_PBKDF2_MIN_ITER;
+	public final static int MAX_ITER = GmSSLJNI.SM3_PBKDF2_MAX_ITER;
+	public final static int MAX_KEY_SIZE = GmSSLJNI.SM3_PBKDF2_MAX_KEY_SIZE;
+
+	public Sm3Pbkdf2();
+	public byte[] deriveKey(String pass, byte[] salt, int iter, int keylen);
+}
+```
+
+下面的例子展示了如何从口令字符串导出一个密钥。
+
+```java
+import org.gmssl.Sm3Pbkdf2;
+import org.gmssl.Random;
+import org.gmssl.Sm4;
+
+public class Sm3Pbkdf2Example {
+
+	public static void main(String[] args) {
+
+		Sm3Pbkdf2 kdf = new Sm3Pbkdf2();
+
+		Random rng = new Random();
+		byte[] salt = rng.randBytes(Sm3Pbkdf2.DEFAULT_SALT_SIZE);
+
+		String pass = "P@ssw0rd";
+		byte[] key = kdf.deriveKey(pass, salt, Sm3Pbkdf2.MIN_ITER * 2, Sm4.KEY_SIZE);
+	}
+}
+```
+
 
 ### SM4分组密码
 
@@ -910,3 +957,10 @@ public class Sm9SignExample {
 ### GmSSLException
 
 GmSSL-Java在遇到错误和异常时，会抛出`GmSSLException`异常。
+
+## 开发者
+
+<a href="https://github.com/GmSSL/GmSSL-Java/graphs/contributors">
+	<img src="https://contrib.rocks/image?repo=GmSSL/GmSSL-Java" />
+</a>
+
