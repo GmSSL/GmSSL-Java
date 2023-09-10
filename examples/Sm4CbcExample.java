@@ -1,5 +1,5 @@
 /*
- *  Copyright 2014-2022 The GmSSL Project. All Rights Reserved.
+ *  Copyright 2014-2023 The GmSSL Project. All Rights Reserved.
  *
  *  Licensed under the Apache License, Version 2.0 (the License); you may
  *  not use this file except in compliance with the License.
@@ -17,33 +17,56 @@ public class Sm4CbcExample {
 		Random rng = new Random();
 		byte[] key = rng.randBytes(Sm4Cbc.KEY_SIZE);
 		byte[] iv = rng.randBytes(Sm4Cbc.IV_SIZE);
-		byte[] ciphertext = new byte[Sm4Cbc.BLOCK_SIZE * 2];
-		byte[] plaintext = new byte[Sm4Cbc.BLOCK_SIZE * 2];
-		int cipherlen;
-		int plainlen;
+
+		// Encrypted plaintext is "110101200106032443"
+		byte[] plaintext = "ID:110101200106032443".getBytes();
+		int plaintextOffset = "ID:".length();
+		int plaintextLen = plaintext.length - plaintextOffset;
+
 		boolean encrypt = true;
 		boolean decrypt = false;
 		int i;
 
+		System.out.println("SM4-CBC Example");
+
 		Sm4Cbc sm4cbc = new Sm4Cbc();
 
+		// Encrypt
+
+		byte[] ciphertext = new byte[plaintextLen + Sm4Cbc.BLOCK_SIZE]; // Prepare large enough ciphertext buffer
+		int ciphertextOffset = 0;
+		int ciphertextLen;
+
 		sm4cbc.init(key, iv, encrypt);
-		cipherlen = sm4cbc.update("abc".getBytes(), 0, 3, ciphertext, 0);
-		cipherlen += sm4cbc.doFinal(ciphertext, cipherlen);
+
+		ciphertextLen = sm4cbc.update(plaintext, plaintextOffset, plaintextLen, ciphertext, ciphertextOffset);
+		ciphertextOffset += ciphertextLen;
+
+		ciphertextLen += sm4cbc.doFinal(ciphertext, ciphertextOffset);
 
 		System.out.print("ciphertext : ");
-		for (i = 0; i < cipherlen; i++) {
+		for (i = 0; i < ciphertextLen; i++) {
 			System.out.printf("%02x", ciphertext[i]);
 		}
 		System.out.print("\n");
 
-		sm4cbc.init(key, iv, decrypt);
-		plainlen = sm4cbc.update(ciphertext, 0, cipherlen, plaintext, 0);
-		plainlen += sm4cbc.doFinal(plaintext, plainlen);
+		// Decrypt
 
-		System.out.print("plaintext : ");
-		for (i = 0; i < plainlen; i++) {
-			System.out.printf("%02x", plaintext[i]);
+		sm4cbc.init(key, iv, decrypt);
+
+		byte[] decrypted = new byte[ciphertextLen + Sm4Cbc.BLOCK_SIZE]; // prepare large enough plaintext buffer
+		int decryptedOffset = 0;
+		int decryptedLen;
+
+		ciphertextOffset = 0;
+		decryptedLen = sm4cbc.update(ciphertext, ciphertextOffset, ciphertextLen, decrypted, decryptedOffset);
+		decryptedOffset += decryptedLen;
+
+		decryptedLen += sm4cbc.doFinal(decrypted, decryptedOffset);
+
+		System.out.print("decrypted : ");
+		for (i = 0; i < decryptedLen; i++) {
+			System.out.printf("%02x", decrypted[i]);
 		}
 		System.out.print("\n");
 	}

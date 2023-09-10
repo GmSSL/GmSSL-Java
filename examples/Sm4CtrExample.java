@@ -1,5 +1,5 @@
 /*
- *  Copyright 2014-2022 The GmSSL Project. All Rights Reserved.
+ *  Copyright 2014-2023 The GmSSL Project. All Rights Reserved.
  *
  *  Licensed under the Apache License, Version 2.0 (the License); you may
  *  not use this file except in compliance with the License.
@@ -8,7 +8,6 @@
  */
 
 import org.gmssl.Sm4Ctr;
-import org.gmssl.GmSSLJNI;
 import org.gmssl.Random;
 
 public class Sm4CtrExample {
@@ -18,8 +17,8 @@ public class Sm4CtrExample {
 		Random rng = new Random();
 		byte[] key = rng.randBytes(Sm4Ctr.KEY_SIZE);
 		byte[] iv = rng.randBytes(Sm4Ctr.IV_SIZE);
-		byte[] ciphertext = new byte[32];
-		byte[] plaintext = new byte[32];
+		byte[] ciphertext = new byte[64];
+		byte[] plaintext = new byte[64];
 		int cipherlen;
 		int plainlen;
 		int i;
@@ -27,7 +26,9 @@ public class Sm4CtrExample {
 		Sm4Ctr sm4ctr = new Sm4Ctr();
 
 		sm4ctr.init(key, iv);
-		cipherlen = sm4ctr.update("abc".getBytes(), 0, 3, ciphertext, 0);
+		cipherlen = sm4ctr.update("abc".getBytes(), 0, "abc".length(), ciphertext, 0);
+		cipherlen += sm4ctr.update("12345678".getBytes(), 0, "12345678".length(), ciphertext, cipherlen);
+		cipherlen += sm4ctr.update("xxyyyzzz".getBytes(), 0, "xxyyyzzz".length(), ciphertext, cipherlen);
 		cipherlen += sm4ctr.doFinal(ciphertext, cipherlen);
 
 		System.out.print("ciphertext : ");

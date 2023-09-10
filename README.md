@@ -41,6 +41,12 @@ GmSSL-Java提供一个包`org.gmssl`，其中包含如下密码算法类
 
 其中还有一个特殊的`org.gmssl.GmSSLJNI`类，这是底层的JNI封装，不建议用户调用。
 
+## 开发者
+
+<a href="https://github.com/GmSSL/GmSSL-Java/graphs/contributors">
+	<img src="https://contrib.rocks/image?repo=GmSSL/GmSSL-Java" />
+</a>
+
 
 ## 编译和安装
 
@@ -246,8 +252,13 @@ public class Sm3HmacExample {
 
 应用在通过`update`完成数据输入后，调用`generateMac`可以获得消息认证码，HMAC-SM3输出为固定32字节，即`MAC_SIZE`长度的二进制消息认证码。
 
-
 ### 基于口令的密钥导出函数 PBKDF2
+
+常用软件如Word、PDF、WinRAR等支持基于口令的文件加密，字符串形式的口令相对于随机的密钥字节序列对用户来说更容易记忆和输入，对用户更加友好。但是由于口令中存在的信息熵远低于随机的二进制密钥，直接将口令字符串作为密钥，甚至无法抵御来自个人计算机的暴力破解攻击。一种典型的错误用法是直接用哈希函数计算口令的哈希值，将看起来随机的哈希值作为密钥使用。但是由于口令的空间相对较小，攻击者仍然可以尝试所有可能口令的哈希值，对于暴力破解来说，破解口令的哈希值和原始口令，在攻击难度上没有太大差别。
+
+安全和规范的做法是采用一个基于口令的密钥导出函数(Password-Based Key Derivation Function, PBKDF)从口令中导出密钥。通过PBKDF导出密钥并不会降低攻击者在暴力破解时尝试的口令数量，但是可以防止攻击者通过查预计算表的方式来加速破解，并且可以大大增加攻击者尝试每一个可能口令的计算时间。PBKDF2是安全的并且使用广泛的PBKDF算法标准之一，算法采用哈希函数作为将口令映射为密钥的主要部件，通过加入随机并且公开的盐值(Salt)来抵御预计算，通过增加多轮的循环计算来增加在线破解的难度，并且支持可变的导出密钥长度。
+
+类`Sm3Pbkdf2`实现了基于SM3的PBKDF2算法。
 
 ```java
 public class Sm3Pbkdf2 {
@@ -262,6 +273,13 @@ public class Sm3Pbkdf2 {
 	public byte[] deriveKey(String pass, byte[] salt, int iter, int keylen);
 }
 ```
+
+其中核心的密钥导出功能是通过`deriveKey`方法实现的。
+
+* `pass`用于导出密钥的用户口令。
+* `salt`是用于抵御与计算的盐值。这个值需要用随机生成（比如通过`Random`类），并且具有一定的长度。Salt值不需要保密，因此在口令加密数据时，可以直接将这个值附在密文前，传输给接收方。Salt值越长，抵御预计算攻击的效果就更好。例如当Salt为8字节（64比特）长的随机值时，攻击者预计算表就要扩大$2^{64}$倍。`Sm3Pbkdf2`提供一个推荐的Salt值长度`DEFAULT_SALT_SIZE`常量，并且在实现上不支持超过`MAX_SALT_SIZE`长度的Salt值。
+* `iter`参数用于表示在导出密钥时调用SM3算法的循环次数，`iter`值越大，暴力破解的难度越大，但是同时用户在调用这个函数时的开销也增大了。一般来说`iter`值的应该选择在用户可接收延迟情况下的最大值，比如当`iter = 10000`时，用户延迟为100毫秒，但是对于用户来说延迟感受不明显，但是对于暴力攻击者来说`iter = 10000`意味着攻击的开销增加了大约1万倍。`Sm3Pbkdf2`通过`MIN_ITER`和`MAX_ITER`两个常量给出了`iter`值的范围，用户可以根据当前计算机的性能及用户对延迟的可感知度，在这个范围内选择合适的值。
+* `keylen`参数表示希望导出的密钥长度，这个长度不可超过常量`MAX_KEY_SIZE`。
 
 下面的例子展示了如何从口令字符串导出一个密钥。
 
@@ -332,6 +350,8 @@ public class Sm4Example {
 ```
 
 多次调用`Sm4`的分组加密解密功能可以实现ECB模式，由于ECB模式在消息加密应用场景中并不安全，因此GmSSL中没有提供ECB模式。如果应用需要开发SM4的其他加密模式，也可可以基于`Sm4`类来开发这些模式。
+
+
 
 ### SM4-CBC加密模式
 
@@ -957,10 +977,4 @@ public class Sm9SignExample {
 ### GmSSLException
 
 GmSSL-Java在遇到错误和异常时，会抛出`GmSSLException`异常。
-
-## 开发者
-
-<a href="https://github.com/GmSSL/GmSSL-Java/graphs/contributors">
-	<img src="https://contrib.rocks/image?repo=GmSSL/GmSSL-Java" />
-</a>
 
