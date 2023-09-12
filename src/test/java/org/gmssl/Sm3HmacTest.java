@@ -1,8 +1,22 @@
+/*
+ *  Copyright 2014-2023 The GmSSL Project. All Rights Reserved.
+ *
+ *  Licensed under the Apache License, Version 2.0 (the License); you may
+ *  not use this file except in compliance with the License.
+ *
+ *  http://www.apache.org/licenses/LICENSE-2.0
+ */
 package org.gmssl;
 
 import org.junit.Assert;
 import org.junit.Test;
 
+/**
+ * @author yongfeili
+ * @email  290836576@qq.com
+ * @date 2023/09/07
+ * @description Sm3Hmac unit test
+ */
 public class Sm3HmacTest {
 
     @Test
@@ -15,12 +29,9 @@ public class Sm3HmacTest {
         sm3hmac.update(testStr.getBytes(), 0, 3);
         byte[] mac = sm3hmac.generateMac();
 
-        StringBuilder buff=new StringBuilder(mac.length*2);
-        for(byte b:mac){
-            buff.append(String.format("%02x",b & 0xff));
-        }
-        //System.out.println(buff.toString());
-        Assert.assertNotNull("数据为空异常",buff.toString());
+        String maxHex= HexUtil.byteToHex(mac);
+        //System.out.println(maxHex);
+        Assert.assertNotNull("数据为空异常",maxHex);
     }
 
 }
