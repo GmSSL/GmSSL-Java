@@ -2,7 +2,7 @@
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.gmssl</groupId>
   <artifactId>GmSSL-Java</artifactId>
-  <version>2.1.0</version>
+  <version>2.1.0-develop</version>
   <name>GmSSL-Java</name>
   <description>GmSSL Java SDK</description>
   
@@ -11,7 +11,7 @@
          <maven.compiler.source>11</maven.compiler.source>  
          <maven.compiler.target>11</maven.compiler.target> 
 		 <maven.compiler.compilerVersion>11</maven.compiler.compilerVersion>
-         <skipTests>true</skipTests>
+         <skipTests>false</skipTests>
 	</properties>
 
     <dependencies>
@@ -21,6 +21,189 @@
             <version>4.13.1</version>
             <scope>test</scope>
         </dependency>
+        <dependency>
+            <groupId>com.github.fommil</groupId>
+            <artifactId>jniloader</artifactId>
+            <version>1.1</version>
+        </dependency>
     </dependencies>
+
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>com.googlecode.cmake-maven-project</groupId>
+                <artifactId>cmake-maven-plugin</artifactId>
+                <version>3.23.2-b1</version>
+                <executions>
+                    <execution>
+                        <id>cmake-generate</id>
+                        <goals>
+                            <goal>generate</goal>
+                        </goals>
+                        <configuration>
+                            <sourcePath>
+                                <!-- The directory containing CMakeLists -->
+                                src/main/c
+                            </sourcePath>
+                            <targetPath>
+                                <!-- The directory write the project files to -->
+                                ${project.build.directory}/${platform}/build
+                            </targetPath>
+                            <generator>
+                                <!--
+                                Optional: Overrides the default generator used by cmake.
+                                The list of available values can be found at
+                                https://cmake.org/cmake/help/v3.22/manual/cmake-generators.7.html
+                                -->
+                            </generator>
+                            <environmentVariables>
+                                <!--
+                                Optional: Additional environment variables to expose to cmake. If a variable was already set,
+                                overrides the previous value.
+                                -->
+                                <key>value</key>
+                            </environmentVariables>
+                            <options>
+                                <!--
+                                Optional: One or more options found at https://cmake.org/cmake/help/v3.22/manual/cmake.1.html
+                                For example:
+                                -->
+                                <option>-DBUILD_THIRDPARTY:bool=on</option>
+                            </options>
+                        </configuration>
+                    </execution>
+
+                    <execution>
+                        <id>cmake-compile</id>
+                        <goals>
+                            <goal>compile</goal>
+                        </goals>
+                        <configuration>
+                            <config>
+                                <!-- Optional: the build configuration (e.g. "x64|Release") -->
+                            </config>
+                            <target>
+                                <!-- Optional: the build "target" -->
+                            </target>
+                            <projectDirectory>
+                                <!-- "targetPath" from the "generate" goal -->
+                                ${project.build.directory}/${platform}/build
+                            </projectDirectory>
+                            <environmentVariables>
+                                <key>value</key>
+                            </environmentVariables>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+
+            <!--  set custom java lib path -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>3.1.2</version>
+                <configuration>
+                    <systemPropertyVariables>
+                        <argLine>-Djava.library.path=${project.build.directory}/classes</argLine>
+                    </systemPropertyVariables>
+                </configuration>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-clean-plugin</artifactId>
+                <version>3.3.1</version>
+                <configuration>
+                    <failOnError>false</failOnError>
+                    <filesets>
+                        <fileset>
+                            <directory>${basedir}/src/main/resources/lib/${platform}</directory>
+                            <includes>
+                                <include>*.dll</include>
+                                <include>*.pdb</include>
+                                <include>*.so</include>
+                                <include>*.dylib</include>
+                            </includes>
+                            <followSymlinks>false</followSymlinks>
+                        </fileset>
+                    </filesets>
+                </configuration>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-resources-plugin</artifactId>
+                <version>3.3.1</version>
+                <executions>
+                    <execution>
+                        <id>copy-resources</id>
+                        <!-- here the phase you need -->
+                        <phase>compile</phase>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${project.build.directory}</outputDirectory>
+                            <resources>
+                                <resource>
+                                    <directory>${project.build.directory}/${platform}/build</directory>
+                                    <includes>
+                                        <include>*.dll</include>
+                                        <include>*.pdb</include>
+                                        <include>*.so</include>
+                                        <include>*.dylib</include>
+                                    </includes>
+                                    <targetPath>${basedir}/target/classes/lib/${platform}</targetPath>
+                                </resource>
+                                <resource>
+                                    <directory>${project.build.directory}/${platform}/build</directory>
+                                    <includes>
+                                        <include>*.dll</include>
+                                        <include>*.pdb</include>
+                                        <include>*.so</include>
+                                        <include>*.dylib</include>
+                                    </includes>
+                                    <targetPath>${basedir}/src/main/resources/lib/${platform}</targetPath>
+                                </resource>
+                            </resources>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+        </plugins>
+    </build>
+
+    <profiles>
+        <profile>
+            <id>linux-x86_64</id>
+            <activation>
+                <activeByDefault>true</activeByDefault>
+            </activation>
+            <properties>
+                <platform>linux-x86_64</platform>
+            </properties>
+        </profile>
+        <profile>
+            <id>win-x86_64</id>
+            <properties>
+                <platform>win-x86_64</platform>
+            </properties>
+        </profile>
+    </profiles>
+
+    <pluginRepositories>
+        <pluginRepository>
+            <id>central-maven2</id>
+            <name>Maven Mirror</name>
+            <url>https://repo1.maven.org/maven2/</url>
+            <releases>
+                <enabled>true</enabled>
+            </releases>
+            <snapshots>
+                <enabled>false</enabled>
+            </snapshots>
+        </pluginRepository>
+    </pluginRepositories>
 
 </project>
