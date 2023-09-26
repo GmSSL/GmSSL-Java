@@ -22,7 +22,7 @@ import java.util.Arrays;
  */
 public class Sm4EcbTest {
 
-    byte[] key = null;
+    byte[] key;
 
     @Before
     public void beforeTest(){
