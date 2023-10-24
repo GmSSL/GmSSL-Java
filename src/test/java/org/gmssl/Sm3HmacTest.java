@@ -31,7 +31,7 @@ public class Sm3HmacTest {
 
         String maxHex= HexUtil.byteToHex(mac);
         //System.out.println(maxHex);
-        Assert.assertNotNull("数据为空异常",maxHex);
+        Assert.assertNotNull("data is empty exception!",maxHex);
     }
 
 }

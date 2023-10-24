@@ -10,8 +10,11 @@ package org.gmssl;
 
 
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
+
+import java.util.Arrays;
 
 /**
  * @author yongfei.li
@@ -21,15 +24,15 @@ import org.junit.Test;
  */
 public class ZucTest {
 
-    Random rng = new Random();
-    byte[] key = rng.randBytes(Zuc.KEY_SIZE);
-    byte[] iv = rng.randBytes(Zuc.IV_SIZE);
-    static Zuc zuc;
+    byte[] key , iv;
+    Zuc zuc;
 
 
-    @BeforeClass
-    public static void beforeClass() throws Exception {
+    @Before
+    public void beforeTest(){
         zuc = new Zuc();
+        key=new byte[]{-58, -106, -55, 98, -75, 49, -74, -101, -50, 1, -79, 43, -33, -86, -57, -106};
+        iv=new byte[]{-119, 19, 24, 45, 83, 17, -89, 102, -72, -104, 91, -31, -25, -109, -28, 30};
     }
 
     /**
@@ -37,23 +40,21 @@ public class ZucTest {
      */
     @Test
     public void encryptTest(){
-        byte[] ciphertext = new byte[32];
+        String plaintextStr = "gmss";
+        byte[] plaintext = plaintextStr.getBytes();
 
+        int ciphertextLen = 2 * Zuc.BLOCK_SIZE * (int)Math.ceil((plaintext.length)/(double)Zuc.BLOCK_SIZE);
+        byte[] ciphertext = new byte[Math.max(16,ciphertextLen)];
         int cipherlen;
 
         zuc.init(key, iv);
-        cipherlen = zuc.update("abc".getBytes(), 0, 3, ciphertext, 0);
+        cipherlen = zuc.update(plaintext, 0, plaintext.length, ciphertext, 0);
         cipherlen += zuc.doFinal(ciphertext, cipherlen);
 
-        //System.out.print("ciphertext : ");
-        byte[] ciphertextEnd = new byte[cipherlen];
-        for (int i = 0; i < cipherlen; i++) {
-            //System.out.printf("%02x", ciphertext[i]);
-            ciphertextEnd[i]=ciphertext[i];
-        }
-        String ciphertextHex= HexUtil.byteToHex(ciphertextEnd);
+        ciphertext = Arrays.copyOfRange(ciphertext,0,cipherlen);
+        String ciphertextHex= HexUtil.byteToHex(ciphertext);
         //System.out.println(ciphertextHex);
-        Assert.assertNotNull("数据为空异常",ciphertextHex);
+        Assert.assertNotNull("data is empty exception!",ciphertextHex);
     }
 
     /**
@@ -61,27 +62,21 @@ public class ZucTest {
      */
     @Test
     public void decryptTest(){
-        String plaintextStr="abc";
+        String ciphertextHex = "91a99db164";
 
-        key=new byte[]{-58, -106, -55, 98, -75, 49, -74, -101, -50, 1, -79, 43, -33, -86, -57, -106};
-        iv=new byte[]{-119, 19, 24, 45, 83, 17, -89, 102, -72, -104, 91, -31, -25, -109, -28, 30};
-        int cipherlen=3;
         int plainlen;
-        byte[] ciphertext=new byte[]{-105, -90, -115, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0};
-        byte[] plaintext = new byte[32];
+        byte[] ciphertext=HexUtil.hexToByte(ciphertextHex);
+        int plaintextLen = 2 * Zuc.BLOCK_SIZE * (int)Math.ceil((ciphertext.length)/(double)Zuc.BLOCK_SIZE);
+        byte[] plaintext = new byte[Math.max(16,plaintextLen)];
 
         zuc.init(key, iv);
-        plainlen = zuc.update(ciphertext, 0, cipherlen, plaintext, 0);
+        plainlen = zuc.update(ciphertext, 0, ciphertext.length, plaintext, 0);
         plainlen += zuc.doFinal(plaintext, plainlen);
 
-        //System.out.print("plaintext : ");
-        byte[] plaintextEnd = new byte[plainlen];
-        for (int i = 0; i < plainlen; i++) {
-            //System.out.printf("%02x", plaintext[i]);
-            plaintextEnd[i]=plaintext[i];
-        }
-        //System.out.println(new String(plaintextEnd));
-        Assert.assertEquals(plaintextStr,new String(plaintextEnd));
+        plaintext=Arrays.copyOfRange(plaintext,0,plainlen);
+        String plaintextStr = new String(plaintext);
+        //System.out.println(plaintextStr);
+        Assert.assertEquals("original value is not equal to the expected value after decryption!","gmssl",plaintextStr);
     }
 
 

@@ -22,17 +22,13 @@ public class Sm3Test {
     @Test
     public void digestTest(){
         String testStr="gmssl";
-        try(Sm3 sm3 = new Sm3()) {
-            sm3.update(testStr.getBytes());
-            byte[] dgst = sm3.digest();
+        Sm3 sm3 = new Sm3();
+        sm3.update(testStr.getBytes());
+        byte[] dgst = sm3.digest();
 
-            String dgstHex= HexUtil.byteToHex(dgst);
-            //System.out.println(dgstHex);
-            Assert.assertNotNull("数据为空异常",dgstHex);
-        }catch (Exception e){
-            e.printStackTrace();
-        }
-
+        String dgstHex= HexUtil.byteToHex(dgst);
+        //System.out.println(dgstHex);
+        Assert.assertNotNull("data is empty exception!",dgstHex);
     }
 
 }
