@@ -68,7 +68,7 @@ public class Sm9Test {
         Sm9EncMasterKey enc_master_key = new Sm9EncMasterKey();
         enc_master_key.generateMasterKey();
 
-        //enc_master_key.exportPublicMasterKeyPem("sm9enc.mpk");
+        enc_master_key.exportPublicMasterKeyPem("sm9enc.mpk");
         Sm9EncMasterKey enc_master_pub_key = new Sm9EncMasterKey();
         enc_master_pub_key.importPublicMasterKeyPem("sm9enc.mpk");
 
