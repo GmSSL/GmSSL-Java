@@ -9,6 +9,8 @@
 package org.gmssl;
 
 
+import java.math.BigInteger;
+
 /**
  * @author yongfeili
  * @email  290836576@qq.com
@@ -17,30 +19,31 @@ package org.gmssl;
  */
 public class HexUtil {
 
-    private static final char HexCharArr[] = {'0','1','2','3','4','5','6','7','8','9','a','b','c','d','e','f'};
-
-    private static final String HexStr = "0123456789abcdef";
-
+    /**
+     * convert byte array to hex string
+     * @param btArr
+     * @return String
+     */
     public static String byteToHex(byte[] btArr) {
-        char strArr[] = new char[btArr.length * 2];
-        int i = 0;
-        for (byte bt : btArr) {
-            strArr[i++] = HexCharArr[bt>>>4 & 0xf];
-            strArr[i++] = HexCharArr[bt & 0xf];
-        }
-        return new String(strArr);
+        BigInteger bigInteger = new BigInteger(1, btArr);
+        return bigInteger.toString(16);
     }
 
-    public static byte[] hexToByte(String hexStr) {
-        char[] charArr = hexStr.toCharArray();
-        byte btArr[] = new byte[charArr.length / 2];
-        int index = 0;
-        for (int i = 0; i < charArr.length; i++) {
-            int highBit = HexStr.indexOf(charArr[i]);
-            int lowBit = HexStr.indexOf(charArr[++i]);
-            btArr[index] = (byte) (highBit << 4 | lowBit);
-            index++;
+    /**
+     * convert hex string to byte array
+     * @param hexString
+     * @return byte[]
+     */
+    public static byte[] hexToByte(String hexString) {
+        byte[] byteArray = new BigInteger(hexString, 16)
+                .toByteArray();
+        if (byteArray[0] == 0) {
+            byte[] output = new byte[byteArray.length - 1];
+            System.arraycopy(
+                    byteArray, 1, output,
+                    0, output.length);
+            return output;
         }
-        return btArr;
+        return byteArray;
     }
 }

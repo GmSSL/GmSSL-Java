@@ -59,7 +59,7 @@ public class Sm4EcbTest {
      * @param blockSize
      * @return byte[] ciphertext
      */
-    public static byte[] pkcs5padding(byte[] ciphertextArray, int blockSize) {
+    private static byte[] pkcs5padding(byte[] ciphertextArray, int blockSize) {
         int paddingLength = blockSize - (ciphertextArray.length % blockSize);
         byte[] padding = new byte[paddingLength];
         Arrays.fill(padding, (byte) paddingLength);
@@ -75,7 +75,7 @@ public class Sm4EcbTest {
      * @return byte[] plaintext
      * @throws IllegalArgumentException
      */
-    public static byte[] pkcs5Unpadding(byte[] plaintextArray) throws IllegalArgumentException {
+    private static byte[] pkcs5Unpadding(byte[] plaintextArray) throws IllegalArgumentException {
         int paddingSize = plaintextArray[plaintextArray.length - 1];
         if (paddingSize <= 0 || paddingSize > plaintextArray.length) {
             throw new IllegalArgumentException("Invalid pkcs#5 padding!");
@@ -95,7 +95,7 @@ public class Sm4EcbTest {
      * @param key
      * @return byte[] encrypted data
      */
-    public static byte[] encrypt(byte[] data, byte[] key) {
+    private static byte[] encrypt(byte[] data, byte[] key) {
         byte[] ciphertext = new byte[data.length];
         Sm4 sm4 = new Sm4(key, true);
         for (int i = 0; i < data.length; i += Sm4.BLOCK_SIZE) {
@@ -110,7 +110,7 @@ public class Sm4EcbTest {
      * @param key
      * @return byte[] decrypted data
      */
-    public static byte[] decrypt(byte[] data, byte[] key) {
+    private static byte[] decrypt(byte[] data, byte[] key) {
         byte[] plaintext=new byte[data.length];
         Sm4 sm4 = new Sm4(key, false);
         for (int i = 0; i < data.length; i += 16) {

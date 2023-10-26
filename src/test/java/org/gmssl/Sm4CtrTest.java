@@ -23,7 +23,7 @@ public class Sm4CtrTest {
 
     private Sm4Ctr sm4Ctr;
 
-    byte[] key = null,iv = null;
+    byte[] key ,iv ;
 
     @Before
     public void beforeTest(){
@@ -43,7 +43,7 @@ public class Sm4CtrTest {
         cipherlen += sm4Ctr.doFinal(ciphertext, cipherlen);
         byte[] ciphertextEnd =  Arrays.copyOfRange(ciphertext,0,cipherlen);
         //System.out.println(HexUtil.byteToHex(ciphertextEnd));
-        Assert.assertNotNull("数据为空异常",HexUtil.byteToHex(ciphertextEnd));
+        Assert.assertNotNull("data is empty exception!",HexUtil.byteToHex(ciphertextEnd));
     }
 
     @Test
@@ -58,7 +58,7 @@ public class Sm4CtrTest {
         plainlen += sm4Ctr.doFinal(plaintext, plainlen);
         plaintext=Arrays.copyOfRange(plaintext,0,plainlen);
         //System.out.println(new String(plaintext));
-        Assert.assertEquals(plainText,new String(plaintext));
+        Assert.assertEquals("original value is not equal to the expected value after decryption!",plainText,new String(plaintext));
     }
 
 }
