@@ -1,19 +1,29 @@
 cmake_minimum_required(VERSION 3.11)
 project(gmssljni)
 
-add_library(gmssljni-native SHARED gmssljni.c)
-target_include_directories(gmssljni-native PUBLIC ${CMAKE_SOURCE_DIR}/src/include)
-target_link_libraries(gmssljni-native -L/usr/local/lib)
-target_link_libraries(gmssljni-native gmssl)
-set_target_properties(gmssljni-native PROPERTIES OUTPUT_NAME gmssljni)
-
-
-find_package(Java REQUIRED)
-include(UseJava)
-include_directories(jni)
-include_directories(/usr/local/include)
-
-enable_testing()
+if(WIN32)
+    message(STATUS "->Now is windows")
+    link_directories("$ENV{winLibPath}")
+    add_library(gmssljni-native SHARED gmssljni.c)
+    target_include_directories(gmssljni-native PUBLIC "$ENV{winIncludePath}")
+    #target_include_directories(gmssljni-native PUBLIC ${CMAKE_SOURCE_DIR}/jni)
+    find_package(JNI REQUIRED)
+    include_directories(${JNI_INCLUDE_DIRS})
+    target_link_libraries(gmssljni-native gmssl)
+    set_target_properties(gmssljni-native PROPERTIES OUTPUT_NAME libgmssljni)
+elseif(APPLE)
+    message(STATUS "->Now is Apple systems.")
+elseif(UNIX)
+    message(STATUS "->Now is UNIX-like OS's.")
+    add_library(gmssljni-native SHARED gmssljni.c)
+    target_link_libraries(gmssljni-native -L"$ENV{linuxLibPath}")
+    include_directories(jni)
+    include_directories("$ENV{linuxIncludePath}")
+    target_link_libraries(gmssljni-native gmssl)
+    set_target_properties(gmssljni-native PROPERTIES OUTPUT_NAME gmssljni)
+else()
+    message(FATAL_ERROR "->Now is other systems.")
+endif()
 
 set(certfile
 "-----BEGIN CERTIFICATE-----\n"
@@ -29,5 +39,3 @@ set(certfile
 "pDoiVhsLwg==\n"
 "-----END CERTIFICATE-----\n")
 file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/ROOTCA.pem ${certfile})
-
-

@@ -41,7 +41,7 @@
                             </sourcePath>
                             <targetPath>
                                 <!-- The directory write the project files to -->
-                                ${project.build.directory}/${platform}/build
+                                ${project.build.directory}/build
                             </targetPath>
                             <generator>
                                 <!--
@@ -55,7 +55,10 @@
                                 Optional: Additional environment variables to expose to cmake. If a variable was already set,
                                 overrides the previous value.
                                 -->
-                                <key>value</key>
+                                <winIncludePath>C:/Program Files/GmSSL/include</winIncludePath>
+                                <winLibPath>C:/Program Files/GmSSL/lib</winLibPath>
+                                <linuxIncludePath>/usr/local/include</linuxIncludePath>
+                                <linuxLibPath>/usr/local/lib</linuxLibPath>
                             </environmentVariables>
                             <options>
                                 <!--
@@ -81,7 +84,7 @@
                             </target>
                             <projectDirectory>
                                 <!-- "targetPath" from the "generate" goal -->
-                                ${project.build.directory}/${platform}/build
+                                ${project.build.directory}/build
                             </projectDirectory>
                             <environmentVariables>
                                 <key>value</key>
@@ -112,12 +115,10 @@
                     <failOnError>false</failOnError>
                     <filesets>
                         <fileset>
-                            <directory>${basedir}/src/main/resources/lib/${platform}</directory>
+                            <directory>${basedir}/src/main/resources/lib</directory>
                             <includes>
-                                <include>*.dll</include>
-                                <include>*.pdb</include>
+                                <include>**/**.dll</include>
                                 <include>*.so</include>
-                                <include>*.dylib</include>
                             </includes>
                             <followSymlinks>false</followSymlinks>
                         </fileset>
@@ -141,24 +142,20 @@
                             <outputDirectory>${project.build.directory}</outputDirectory>
                             <resources>
                                 <resource>
-                                    <directory>${project.build.directory}/${platform}/build</directory>
+                                    <directory>${project.build.directory}/build</directory>
                                     <includes>
-                                        <include>*.dll</include>
-                                        <include>*.pdb</include>
+                                        <include>**/**.dll</include>
                                         <include>*.so</include>
-                                        <include>*.dylib</include>
                                     </includes>
-                                    <targetPath>${basedir}/target/classes/lib/${platform}</targetPath>
+                                    <targetPath>${basedir}/target/classes/lib</targetPath>
                                 </resource>
                                 <resource>
-                                    <directory>${project.build.directory}/${platform}/build</directory>
+                                    <directory>${project.build.directory}/build</directory>
                                     <includes>
-                                        <include>*.dll</include>
-                                        <include>*.pdb</include>
+                                        <include>**/**.dll</include>
                                         <include>*.so</include>
-                                        <include>*.dylib</include>
                                     </includes>
-                                    <targetPath>${basedir}/src/main/resources/lib/${platform}</targetPath>
+                                    <targetPath>${basedir}/src/main/resources/lib</targetPath>
                                 </resource>
                             </resources>
                         </configuration>
@@ -167,24 +164,6 @@
             </plugin>
         </plugins>
     </build>
-
-    <profiles>
-        <profile>
-            <id>linux-x86_64</id>
-            <activation>
-                <activeByDefault>true</activeByDefault>
-            </activation>
-            <properties>
-                <platform>linux-x86_64</platform>
-            </properties>
-        </profile>
-        <profile>
-            <id>win-x86_64</id>
-            <properties>
-                <platform>win-x86_64</platform>
-            </properties>
-        </profile>
-    </profiles>
 
     <pluginRepositories>
         <pluginRepository>
