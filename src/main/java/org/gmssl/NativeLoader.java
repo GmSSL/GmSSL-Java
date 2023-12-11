@@ -45,20 +45,22 @@ public class NativeLoader {
             if(LOADED_LIBARAY_SET.contains(lib)){
                 continue;
             }
-            //load personal jni library,the path must be a full path relative to the operating system,the lib file extension must be given too.
+            //load personal jni library,the path must be a full path relative to the operating system,the lib file extension must be given too. eg:/home/lib/libxxx.so
             File personalLibFile = new File(lib).getAbsoluteFile();
             if(personalLibFile.exists() && personalLibFile.isFile()){
                 loadLibFile(personalLibFile,lib);
             }else{
                 //load custom jni library,the default path is resources/lib of this project,load the corresponding class library according to the operating system.
-                String resourceLibPath=RESOURCELIB_PREFIXPATH+"/" + platform()+"/"+lib+"."+libExtension();
+                String resourceLibPath=RESOURCELIB_PREFIXPATH;
+                if(osType().equals("win")){
+                    resourceLibPath+="/Debug";
+                }
+                resourceLibPath+="/"+lib+"."+libExtension();
                 URL resourceUrl = NativeLoader.class.getClassLoader().getResource(resourceLibPath);
                 if(null !=resourceUrl){
-                    File tmpLibFile= createTmpLibFile(resourceLibPath);
-                    loadLibFile(tmpLibFile,lib);
-                    tmpLibFile.deleteOnExit();
+                    loadLibFile(new File(resourceUrl.getFile()),lib);
                 }else{
-                    //load the corresponding system jni library according to the operating system.
+                    //load the corresponding system jni library according to the operating system. eg:libxxx
                     String[] sysLibPathS = System.getProperty("java.library.path").split(File.pathSeparator);
                     for(String sysLibPath:sysLibPathS){
                         File sysLibFile = new File(sysLibPath, lib+"."+libExtension()).getAbsoluteFile();
@@ -92,21 +94,6 @@ public class NativeLoader {
 
     }
 
-    static String archType(){
-        String arch="unknown";
-        String archName = System.getProperty("os.arch").toLowerCase();
-        if ("i386".equals(archName) || "i686".equals(archName)){
-            arch="x86";
-        }
-        if ("x86_64".equals(archName) || "amd64".equals(archName)){
-            arch="x86_64";
-        }
-        if ("arm".equals(archName)) {
-            arch = "arm";
-        }
-        return arch;
-    }
-
     static String libExtension(){
         String osType=osType();
         String libExtension=null;
@@ -122,12 +109,6 @@ public class NativeLoader {
         return libExtension;
     }
 
-    private static String platform(){
-        String os=osType();
-        String arch=archType();
-        return os+"-"+arch;
-    }
-
     private static void loadLibFile(File file,String libName){
         if (file.exists() && file.isFile()) {
             System.load(file.getAbsolutePath());
@@ -136,28 +117,5 @@ public class NativeLoader {
             throw new GmSSLException("lib file is not found!");
         }
     }
-
-    private static File createTmpLibFile(String resourceLibPath){
-        InputStream in = NativeLoader.class.getClassLoader().getResourceAsStream(resourceLibPath);
-        String tmpDirName = System.getProperty("java.io.tmpdir");
-        File tmpDir = new File(tmpDirName);
-        if (!tmpDir.exists()) {
-            tmpDir.mkdir();
-        }
-        File file = null;
-        try {
-            file=File.createTempFile(resourceLibPath, null, tmpDir);
-            assert in != null;
-            ReadableByteChannel srcChannel = Channels.newChannel(in);
-            FileChannel targetChannel = new FileOutputStream(file).getChannel();
-            targetChannel.transferFrom(srcChannel, 0, Long.MAX_VALUE);
-        } catch (FileNotFoundException e) {
-            throw new GmSSLException("FileNotFoundException");
-        } catch (IOException e) {
-            throw new GmSSLException("IOException");
-        }
-        return file;
-    }
-
 
 }
