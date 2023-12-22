@@ -1,29 +1,48 @@
 cmake_minimum_required(VERSION 3.11)
 project(gmssljni)
 
-if(WIN32)
-    message(STATUS "->Now is windows")
-    link_directories("$ENV{winLibPath}")
-    add_library(gmssljni-native SHARED gmssljni.c)
-    target_include_directories(gmssljni-native PUBLIC "$ENV{winIncludePath}")
-    #target_include_directories(gmssljni-native PUBLIC ${CMAKE_SOURCE_DIR}/jni)
-    find_package(JNI REQUIRED)
-    include_directories(${JNI_INCLUDE_DIRS})
-    target_link_libraries(gmssljni-native gmssl)
-    set_target_properties(gmssljni-native PROPERTIES OUTPUT_NAME libgmssljni)
-elseif(APPLE)
-    message(STATUS "->Now is Apple systems.")
-elseif(UNIX)
-    message(STATUS "->Now is UNIX-like OS's.")
-    add_library(gmssljni-native SHARED gmssljni.c)
-    target_link_libraries(gmssljni-native -L"$ENV{linuxLibPath}")
-    include_directories(jni)
-    include_directories("$ENV{linuxIncludePath}")
-    target_link_libraries(gmssljni-native gmssl)
-    set_target_properties(gmssljni-native PROPERTIES OUTPUT_NAME gmssljni)
-else()
-    message(FATAL_ERROR "->Now is other systems.")
-endif()
+add_library(gmssljni-native SHARED gmssljni.c)
+target_include_directories(gmssljni-native PUBLIC ${CMAKE_SOURCE_DIR}/src/include)
+target_link_libraries(gmssljni-native -L/usr/local/lib)
+target_link_libraries(gmssljni-native gmssl)
+set_target_properties(gmssljni-native PROPERTIES OUTPUT_NAME gmssljni)
+
+
+find_package(Java REQUIRED)
+include(UseJava)
+include_directories(jni)
+include_directories(/usr/local/include)
+
+# javac src/main/java/org/gmssl/GmSSLJNI.java -d .
+# jar cf GmSSLJNI.jar GmSSLJNI.class
+add_jar(GmSSLJNI
+	VERSION 2.1.0-dev
+	ENTRY_POINT org.gmssl.GmSSLJNI
+	GENERATE_NATIVE_HEADERS
+	OUTPUT_DIR ${CMAKE_CURRENT_BINARY_DIR}
+	SOURCES src/main/java/org/gmssl/GmSSLJNI.java
+		src/main/java/org/gmssl/GmSSLException.java
+		src/main/java/org/gmssl/Random.java
+		src/main/java/org/gmssl/Sm3.java
+		src/main/java/org/gmssl/Sm3Hmac.java
+		src/main/java/org/gmssl/Sm3Pbkdf2.java
+		src/main/java/org/gmssl/Sm4.java
+		src/main/java/org/gmssl/Sm4Cbc.java
+		src/main/java/org/gmssl/Sm4Ctr.java
+		src/main/java/org/gmssl/Sm4Gcm.java
+		src/main/java/org/gmssl/Zuc.java
+		src/main/java/org/gmssl/Sm2Key.java
+		src/main/java/org/gmssl/Sm2Signature.java
+		src/main/java/org/gmssl/Sm2Certificate.java
+		src/main/java/org/gmssl/Sm9EncMasterKey.java
+		src/main/java/org/gmssl/Sm9EncKey.java
+		src/main/java/org/gmssl/Sm9SignMasterKey.java
+		src/main/java/org/gmssl/Sm9SignKey.java
+		src/main/java/org/gmssl/Sm9Signature.java
+		src/main/java/org/gmssl/NativeLoader.java
+	)
+
+enable_testing()
 
 set(certfile
 "-----BEGIN CERTIFICATE-----\n"
@@ -39,3 +58,7 @@ set(certfile
 "pDoiVhsLwg==\n"
 "-----END CERTIFICATE-----\n")
 file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/ROOTCA.pem ${certfile})
+
+# java -cp GmSSLJNI.jar org.gmssl.GmSSLJNI
+add_test(NAME main COMMAND java -cp GmSSLJNI.jar -Djava.library.path=./ org.gmssl.GmSSLJNI)
+

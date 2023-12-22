@@ -53,7 +53,7 @@ public class Sm2Test {
         String testStr="gmssl";
         byte[] ciphertext = sm2_key.encrypt(testStr.getBytes());
 
-        System.out.println("ciphertext : "+HexUtil.byteToHex(ciphertext));
+        //System.out.println("ciphertext : "+HexUtil.byteToHex(ciphertext));
         Assert.assertNotNull("data is empty exception!",ciphertext);
     }
 
@@ -75,7 +75,7 @@ public class Sm2Test {
         sign.update(signatureContentStr.getBytes());
         byte[] sig = sign.sign();
         String sigHex = HexUtil.byteToHex(sig);
-        System.out.println("sig : "+sigHex);
+        //System.out.println("sig : "+sigHex);
         Assert.assertNotNull("data is empty exception!",sig);
     }
 

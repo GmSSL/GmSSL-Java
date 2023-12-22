@@ -52,9 +52,6 @@ public class NativeLoader {
             }else{
                 //load custom jni library,the default path is resources/lib of this project,load the corresponding class library according to the operating system.
                 String resourceLibPath=RESOURCELIB_PREFIXPATH;
-                if(osType().equals("win")){
-                    resourceLibPath+="/Debug";
-                }
                 resourceLibPath+="/"+lib+"."+libExtension();
                 URL resourceUrl = NativeLoader.class.getClassLoader().getResource(resourceLibPath);
                 if(null !=resourceUrl){

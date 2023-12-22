@@ -35,7 +35,7 @@ public class Sm9Test {
         byte[] sig = sign.sign(sign_key);
         String hexSig = HexUtil.byteToHex(sig);
 
-        System.out.println(hexSig);
+        //System.out.println(hexSig);
         Assert.assertNotNull("data is empty exception!",hexSig);
     }
 
@@ -75,7 +75,7 @@ public class Sm9Test {
         byte[] ciphertext = enc_master_pub_key.encrypt(plaintext, "Bob");
         String ciphertextHex=HexUtil.byteToHex(ciphertext);
 
-        System.out.println(ciphertextHex);
+        //System.out.println(ciphertextHex);
         Assert.assertNotNull("data is empty exception!",ciphertextHex);
     }
 
