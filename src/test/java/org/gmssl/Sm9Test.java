@@ -9,8 +9,10 @@
 package org.gmssl;
 
 import org.junit.Assert;
+import org.junit.Before;
 import org.junit.Test;
 
+import java.io.*;
 import java.util.Map;
 
 /**
@@ -21,130 +23,110 @@ import java.util.Map;
  */
 public class Sm9Test {
 
-
     @Test
     public void signTest() {
         String singContentStr = "gmssl";
         byte[] singContent = singContentStr.getBytes();
+
         Sm9SignMasterKey sign_master_key = new Sm9SignMasterKey();
         sign_master_key.generateMasterKey();
-        Sm9SignKey sign_key = sign_master_key.extractKey("Alice");
-
+        Sm9SignKey sign_key = sign_master_key.extractKey("testKey");
         Sm9Signature sign = new Sm9Signature(true);
         sign.update(singContent);
         byte[] sig = sign.sign(sign_key);
-        String hexSig = HexUtil.byteToHex(sig);
+        sign_master_key.exportPublicMasterKeyPem("sm9sign.mpk");
 
+        String hexSig = HexUtil.byteToHex(sig);
         //System.out.println(hexSig);
+        writeFile("sm9SignData.txt",hexSig);
         Assert.assertNotNull("data is empty exception!",hexSig);
     }
 
-    //@Test
+    @Test
     public void verifyTest(){
-        String  hexSig="3066042016d5e5e3c95bc4e6d865917f6ac8d07aac3ad66cc5c99c99bbe2a66572f53e4403420004970928485c4ad22b932d960633444560a21191cad0d931eba09bbcc6964596bfa395f20e1e94d0e97defbfeafc31ad695e443bc4151c9ac8b69277b43b8ac597";
+        String  hexSig=readFile("sm9SignData.txt");
         byte[] sig=HexUtil.hexToByte(hexSig);
         String singContentStr = "gmssl";
         byte[] singContent = singContentStr.getBytes();
 
-        //Sm9SignMasterKey sign_master_key = new Sm9SignMasterKey();
-        //sign_master_key.generateMasterKey();
-        //sign_master_key.exportPublicMasterKeyPem("sm9sign.mpk");
-        //TODO 方法执行报错，和签名方法放到一起连续执行可以，怀疑必须是同一个内存对象或参数问题
         Sm9SignMasterKey sign_master_pub_key = new Sm9SignMasterKey();
         sign_master_pub_key.importPublicMasterKeyPem("sm9sign.mpk");
-
         Sm9Signature verify = new Sm9Signature(false);
         verify.update(singContent);
-        boolean verify_ret = verify.verify(sig, sign_master_pub_key, "Alice");
+        boolean verify_ret = verify.verify(sig, sign_master_pub_key, "testKey");
 
-        System.out.println("Verify result = " + verify_ret);
+        //System.out.println("Verify result = " + verify_ret);
         Assert.assertTrue("Verification of the signature failed!",verify_ret);
+
     }
 
     @Test
     public void encryptTest(){
         String plaintextStr = "gmssl";
         byte[] plaintext = plaintextStr.getBytes();
+
         Sm9EncMasterKey enc_master_key = new Sm9EncMasterKey();
         enc_master_key.generateMasterKey();
+        enc_master_key.exportEncryptedMasterKeyInfoPem("password","sm9enc.mpk");
 
-        enc_master_key.exportPublicMasterKeyPem("sm9enc.mpk");
         Sm9EncMasterKey enc_master_pub_key = new Sm9EncMasterKey();
-        enc_master_pub_key.importPublicMasterKeyPem("sm9enc.mpk");
+        enc_master_pub_key.importEncryptedMasterKeyInfoPem("password","sm9enc.mpk");
+        byte[] ciphertext = enc_master_pub_key.encrypt(plaintext, "testKey");
 
-        byte[] ciphertext = enc_master_pub_key.encrypt(plaintext, "Bob");
         String ciphertextHex=HexUtil.byteToHex(ciphertext);
-
         //System.out.println(ciphertextHex);
+        writeFile("sm9EncryptData.txt",ciphertextHex);
         Assert.assertNotNull("data is empty exception!",ciphertextHex);
     }
 
-    //@Test
+    @Test
     public void decryptTest(){
-        String ciphertextHex="3070020100034200049718c02b7f61b714fd7b23251cfbd617909ff5e123c15762cb709052d697318742deef3dd6bb98782f80f88f4167d96c684f9460cdbb9eaedf3550ceae588c9004204245245ad278bf17a188604955d2716390736456c4bf1b664d2e025ff043b90204058f67a1a225";
+        String ciphertextHex=readFile("sm9EncryptData.txt");
         byte[] ciphertext=HexUtil.hexToByte(ciphertextHex);
 
         Sm9EncMasterKey enc_master_key = new Sm9EncMasterKey();
-        //enc_master_key.generateMasterKey();
-
-        //enc_master_key.exportPublicMasterKeyPem("sm9enc.mpk");
-        //Sm9EncMasterKey enc_master_pub_key = new Sm9EncMasterKey();
-        //enc_master_pub_key.importPublicMasterKeyPem("sm9enc.mpk");
-       //TODO 方法执行报错，和解密方法放到一起连续执行可以，怀疑必须是同一个内存对象或参数问题
-        Sm9EncKey enc_key = enc_master_key.extractKey("Bob");
+        enc_master_key.importEncryptedMasterKeyInfoPem("password","sm9enc.mpk");
+        Sm9EncKey enc_key = enc_master_key.extractKey("testKey");
         byte[] plaintext = enc_key.decrypt(ciphertext);
 
         String plaintextStr = new String(plaintext);
-        System.out.print("plaintext:"+plaintextStr);
+        //System.out.print(plaintextStr);
         Assert.assertEquals("The original value is not equal to the expected value after decryption!","gmssl",plaintextStr);
     }
 
-    public static void main(String[] args) {
-        Sm9SignMasterKey sign_master_key = new Sm9SignMasterKey();
-        sign_master_key.generateMasterKey();
-
-        Sm9SignKey sign_key = sign_master_key.extractKey("Alice");
-
-        Sm9Signature sign = new Sm9Signature(true);
-        sign.update("abc".getBytes());
-        byte[] sig = sign.sign(sign_key);
-
-
-        //-------------------
-        //String hexSig = HexUtil.byteToHex(sig);
-        String hexSig ="30660420023667f3b3ccf1cdd59980a82c96630486ebef8a8e18928aad2b9bc3232b9c2c03420004aa4ee1834a3496ae6fabb494ac3a1302a69a730dd24f9cf53227c100be574eb92121925044d04fec7635c23698afc03e82cf1195b3f73520d23af5d4e9ebc8b1";
-        System.out.println(hexSig);
-        byte[] sig1=HexUtil.hexToByte(hexSig);
-
-        //-------------------------
-
-
-
-        sign_master_key.exportPublicMasterKeyPem("sm9sign.mpk");
-        Sm9SignMasterKey sign_master_pub_key = new Sm9SignMasterKey();
-        sign_master_pub_key.importPublicMasterKeyPem("sm9sign.mpk");
-
-        Sm9Signature verify = new Sm9Signature(false);
-        verify.update("abc".getBytes());
-        boolean verify_ret = verify.verify(sig, sign_master_pub_key, "Alice");
-        System.out.println("Verify result = " + verify_ret);
-
-        Sm9EncMasterKey enc_master_key = new Sm9EncMasterKey();
-        enc_master_key.generateMasterKey();
-
-        enc_master_key.exportPublicMasterKeyPem("sm9enc.mpk");
-        Sm9EncMasterKey enc_master_pub_key = new Sm9EncMasterKey();
-        enc_master_pub_key.importPublicMasterKeyPem("sm9enc.mpk");
-
-        byte[] ciphertext = enc_master_pub_key.encrypt("abc".getBytes(), "Bob");
-
-        Sm9EncKey enc_key = enc_master_key.extractKey("Bob");
-        byte[] plaintext = enc_key.decrypt(ciphertext);
-        int i;
-        System.out.printf("plaintext: ");
-        for (i = 0; i < plaintext.length; i++) {
-            System.out.printf("%02x", plaintext[i]);
+    /**
+     * Write string data to a temporary file.
+     * @param fileName
+     * @param data
+     */
+    private void writeFile(String fileName,String data){
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter("./" + fileName))) {
+            writer.write(data);
+        } catch (IOException e) {
+            e.printStackTrace();
         }
-        System.out.print("\n");
     }
+
+    /**
+     * Read string data from a temporary file.
+     * @param fileName
+     * @return String data
+     */
+    private String readFile(String fileName){
+        FileReader fileReader = null;
+        StringBuilder data= new StringBuilder();
+        try {
+            fileReader = new FileReader(new File( "./"+fileName));
+            BufferedReader bufferedReader = new BufferedReader(fileReader);
+            String line;
+            while ((line = bufferedReader.readLine()) != null) {
+                data.append(line);
+            }
+            bufferedReader.close();
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        return data.toString();
+    }
+
 }
