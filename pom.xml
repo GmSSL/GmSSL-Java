@@ -1,17 +1,19 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
-  <modelVersion>4.0.0</modelVersion>
-  <groupId>org.gmssl</groupId>
-  <artifactId>GmSSL-Java</artifactId>
-  <version>2.1.0-develop</version>
-  <name>GmSSL-Java</name>
-  <description>GmSSL Java SDK</description>
-  
-  	<properties>
-         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-         <maven.compiler.source>11</maven.compiler.source>  
-         <maven.compiler.target>11</maven.compiler.target> 
-         <skipTests>false</skipTests>
-	</properties>
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>org.gmssl</groupId>
+    <artifactId>GmSSL-Java</artifactId>
+    <version>2.1.0-develop</version>
+    <name>GmSSL-Java</name>
+    <description>GmSSL Java SDK</description>
+
+    <properties>
+        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+        <maven.compiler.source>11</maven.compiler.source>
+        <maven.compiler.target>11</maven.compiler.target>
+        <skipTests>false</skipTests>
+
+        <cmake.compile.config>Debug</cmake.compile.config>
+    </properties>
 
     <dependencies>
         <dependency>
@@ -59,6 +61,8 @@
                                 <winLibPath>C:/Program Files/GmSSL/lib</winLibPath>
                                 <linuxIncludePath>/usr/local/include</linuxIncludePath>
                                 <linuxLibPath>/usr/local/lib</linuxLibPath>
+
+                                <libSubFolder>${cmake.compile.config}</libSubFolder>
                             </environmentVariables>
                             <options>
                                 <!--
@@ -69,7 +73,6 @@
                             </options>
                         </configuration>
                     </execution>
-
                     <execution>
                         <id>cmake-compile</id>
                         <goals>
@@ -117,8 +120,15 @@
                         <fileset>
                             <directory>${basedir}/src/main/resources/lib</directory>
                             <includes>
-                                <include>**/**.dll</include>
+                                <include>*.dll</include>
                                 <include>*.so</include>
+                            </includes>
+                            <followSymlinks>false</followSymlinks>
+                        </fileset>
+                        <fileset>
+                            <directory>${basedir}</directory>
+                            <includes>
+                                <include>ROOTCA.pem</include>
                             </includes>
                             <followSymlinks>false</followSymlinks>
                         </fileset>
@@ -142,20 +152,27 @@
                             <outputDirectory>${project.build.directory}</outputDirectory>
                             <resources>
                                 <resource>
-                                    <directory>${project.build.directory}/build</directory>
+                                    <directory>${project.build.directory}/build/${cmake.compile.config}</directory>
                                     <includes>
-                                        <include>**/**.dll</include>
+                                        <include>*.dll</include>
                                         <include>*.so</include>
                                     </includes>
                                     <targetPath>${basedir}/target/classes/lib</targetPath>
                                 </resource>
                                 <resource>
-                                    <directory>${project.build.directory}/build</directory>
+                                    <directory>${project.build.directory}/build/${cmake.compile.config}</directory>
                                     <includes>
-                                        <include>**/**.dll</include>
+                                        <include>*.dll</include>
                                         <include>*.so</include>
                                     </includes>
                                     <targetPath>${basedir}/src/main/resources/lib</targetPath>
+                                </resource>
+                                <resource>
+                                    <directory>${project.build.directory}/build</directory>
+                                    <includes>
+                                        <include>ROOTCA.pem</include>
+                                    </includes>
+                                    <targetPath>${basedir}</targetPath>
                                 </resource>
                             </resources>
                         </configuration>
