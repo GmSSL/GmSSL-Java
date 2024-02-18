@@ -10,7 +10,9 @@ package org.gmssl;
 
 import org.junit.Assert;
 import org.junit.Before;
+import org.junit.FixMethodOrder;
 import org.junit.Test;
+import org.junit.runners.MethodSorters;
 
 import java.io.*;
 import java.util.Map;
@@ -21,6 +23,7 @@ import java.util.Map;
  * @date 2023/10/20
  * @description sm9 unit test
  */
+@FixMethodOrder(MethodSorters.NAME_ASCENDING)
 public class Sm9Test {
 
     @Test
@@ -60,8 +63,12 @@ public class Sm9Test {
 
     }
 
+    /**
+     * The encryption test method will generate a file, which will be used by the decryption test method ,
+     * the encryption test method needs to be run before the decryption test method.
+     */
     @Test
-    public void encryptTest(){
+    public void _encryptTest(){
         String plaintextStr = "gmssl";
         byte[] plaintext = plaintextStr.getBytes();
 
@@ -100,6 +107,17 @@ public class Sm9Test {
      * @param data
      */
     private void writeFile(String fileName,String data){
+        File tempFile = new File("./"+ fileName);
+        try {
+            if(tempFile.exists()){
+                tempFile.delete();
+            }else {
+                tempFile.createNewFile();
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
         try (BufferedWriter writer = new BufferedWriter(new FileWriter("./" + fileName))) {
             writer.write(data);
         } catch (IOException e) {
@@ -124,6 +142,7 @@ public class Sm9Test {
             }
             bufferedReader.close();
         } catch (IOException e) {
+            e.printStackTrace();
             throw new RuntimeException(e);
         }
         return data.toString();
