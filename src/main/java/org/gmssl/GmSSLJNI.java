@@ -357,6 +357,6 @@ public class GmSSLJNI {
 	}
 
 	static {
-		NativeLoader.load("libgmssljni");
+		NativeLoader.load("lib"+NativeLoader.getPomProperty("libName"));
 	}
 }

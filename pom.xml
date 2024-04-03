@@ -13,9 +13,26 @@
         <skipTests>false</skipTests>
 
         <cmake.compile.config>Debug</cmake.compile.config>
+        <!--Generated library name, without the suffix format, and prefixed with the string 'lib'. -->
+        <libName>gmssljni</libName>
+        <!--The include directory and the location of the lib directory after installing gmssl. Please adjust according to your own situation. -->
+        <winIncludePath>C:/Program Files/GmSSL/include</winIncludePath>
+        <winLibPath>C:/Program Files/GmSSL/lib</winLibPath>
+        <linuxIncludePath>/usr/local/include</linuxIncludePath>
+        <linuxLibPath>/usr/local/lib</linuxLibPath>
+        <macIncludePath>/usr/local/include</macIncludePath>
+        <macLibPath>/usr/local/lib</macLibPath>
+        <!--The address of the gmssl library referenced in the generated library call chain in the macOS environment.
+        The call chain situation can be viewed using the otool -L tool. -->
+        <macReferencedLib>/usr/local/lib/libgmssl.3.dylib</macReferencedLib>
     </properties>
 
     <dependencies>
+        <dependency>
+            <groupId>org.apache.maven</groupId>
+            <artifactId>maven-model</artifactId>
+            <version>3.9.6</version>
+        </dependency>
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>
@@ -53,16 +70,14 @@
                                 -->
                             </generator>
                             <environmentVariables>
-                                <!--
-                                Optional: Additional environment variables to expose to cmake. If a variable was already set,
-                                overrides the previous value.
-                                -->
-                                <winIncludePath>C:/Program Files/GmSSL/include</winIncludePath>
-                                <winLibPath>C:/Program Files/GmSSL/lib</winLibPath>
-                                <linuxIncludePath>/usr/local/include</linuxIncludePath>
-                                <linuxLibPath>/usr/local/lib</linuxLibPath>
-
+                                <winIncludePath>${winIncludePath}</winIncludePath>
+                                <winLibPath>${winLibPath}</winLibPath>
+                                <linuxIncludePath>${linuxIncludePath}</linuxIncludePath>
+                                <linuxLibPath>${linuxLibPath}</linuxLibPath>
+                                <macIncludePath>${macIncludePath}</macIncludePath>
+                                <macLibPath>${macLibPath}</macLibPath>
                                 <libSubFolder>${cmake.compile.config}</libSubFolder>
+                                <libName>${libName}</libName>
                             </environmentVariables>
                             <options>
                                 <!--
@@ -97,19 +112,6 @@
                 </executions>
             </plugin>
 
-
-            <!--  set custom java lib path -->
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-surefire-plugin</artifactId>
-                <version>3.1.2</version>
-                <configuration>
-                    <systemPropertyVariables>
-                        <argLine>-Djava.library.path=${project.build.directory}/classes</argLine>
-                    </systemPropertyVariables>
-                </configuration>
-            </plugin>
-
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-clean-plugin</artifactId>
@@ -122,6 +124,7 @@
                             <includes>
                                 <include>*.dll</include>
                                 <include>*.so</include>
+                                <include>*.dylib</include>
                             </includes>
                             <followSymlinks>false</followSymlinks>
                         </fileset>
@@ -156,6 +159,7 @@
                                     <includes>
                                         <include>*.dll</include>
                                         <include>*.so</include>
+                                        <include>*.dylib</include>
                                     </includes>
                                     <targetPath>${basedir}/target/classes/lib</targetPath>
                                 </resource>
@@ -164,6 +168,7 @@
                                     <includes>
                                         <include>*.dll</include>
                                         <include>*.so</include>
+                                        <include>*.dylib</include>
                                     </includes>
                                     <targetPath>${basedir}/src/main/resources/lib</targetPath>
                                 </resource>

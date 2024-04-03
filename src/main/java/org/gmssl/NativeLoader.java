@@ -8,12 +8,13 @@
  */
 package org.gmssl;
 
+import org.apache.maven.model.Model;
+import org.apache.maven.model.io.xpp3.MavenXpp3Reader;
+import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
+
 import java.io.*;
 import java.net.URL;
-import java.nio.channels.Channels;
-import java.nio.channels.FileChannel;
-import java.nio.channels.ReadableByteChannel;
-import java.util.Arrays;
+import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
 
 /**
@@ -24,7 +25,7 @@ import java.util.concurrent.CopyOnWriteArraySet;
  */
 public class NativeLoader {
 
-    private static final CopyOnWriteArraySet<String> LOADED_LIBARAY_SET=new CopyOnWriteArraySet<>();
+    private static final Set<String> LOADED_LIBARAY_SET=new CopyOnWriteArraySet<>();
 
     /* custom jni library prefix path relative to project resources */
     private static final String RESOURCELIB_PREFIXPATH = "lib";
@@ -70,6 +71,10 @@ public class NativeLoader {
         }
     }
 
+    /**
+     * Get the operating system type.
+     * @return operating system name
+     */
     static String osType(){
         String os="unknown";
         String osName = System.getProperty("os.name").toLowerCase();
@@ -91,6 +96,10 @@ public class NativeLoader {
 
     }
 
+    /**
+     * Get the library extension name based on the operating system type.
+     * @return extension name
+     */
     static String libExtension(){
         String osType=osType();
         String libExtension=null;
@@ -98,7 +107,7 @@ public class NativeLoader {
             libExtension="dll";
         }
         if("osx".equals(osType)){
-            libExtension="jnilib";
+            libExtension="dylib";
         }
         if("linux".equals(osType)){
             libExtension="so";
@@ -106,13 +115,53 @@ public class NativeLoader {
         return libExtension;
     }
 
+    /**
+     * Load the library based on the address of the lib file.
+     * @param file
+     * @param libName
+     */
     private static void loadLibFile(File file,String libName){
         if (file.exists() && file.isFile()) {
+            checkReferencedLib(file.getName());
             System.load(file.getAbsolutePath());
             LOADED_LIBARAY_SET.add(libName);
         }else{
             throw new GmSSLException("lib file is not found!");
         }
     }
+
+    /**
+     * In macOS systems, the execution of library calls relies on loading gmssl.3.dylib from the installed gmssl library,
+     * in order to correct the @rpath path issue. Alternatively, you can manually execute the command
+     * "install_name_tool -change @rpath/libgmssl.3.dylib /usr/local/lib/libgmssl.3.dylib xxx/lib/libgmssljni.dylib" to fix the library reference path issue.
+     * This has already been loaded and manual execution is unnecessary.
+     * @param libName
+     */
+   private static void checkReferencedLib(String libName){
+        String macLibName=getPomProperty("libName")+".dylib";
+       if(libName.endsWith(macLibName)){
+           String macReferencedLib=getPomProperty("macReferencedLib");
+           if(null!=macReferencedLib && !LOADED_LIBARAY_SET.contains(macReferencedLib)){
+               System.load(macReferencedLib);
+               LOADED_LIBARAY_SET.add(macReferencedLib);
+           }
+       }
+   }
+
+    /**
+     * Get the value of the property attribute in the pom.xml file
+     * @param property
+     * @return property value
+     */
+   public static String getPomProperty(String property){
+       String propertyValue;
+       try {
+           Model model = new MavenXpp3Reader().read(new FileReader("pom.xml"));
+           propertyValue= model.getProperties().getProperty(property);
+       } catch (IOException | XmlPullParserException e) {
+           throw new GmSSLException("An exception occurred while reading the pom file!");
+       }
+       return propertyValue;
+   }
 
 }
