@@ -7,40 +7,29 @@ target_link_libraries(gmssljni-native -L/usr/local/lib)
 target_link_libraries(gmssljni-native gmssl)
 set_target_properties(gmssljni-native PROPERTIES OUTPUT_NAME gmssljni)
 
-
 find_package(Java REQUIRED)
 include(UseJava)
 include_directories(jni)
 include_directories(/usr/local/include)
 
-# javac src/main/java/org/gmssl/GmSSLJNI.java -d .
-# jar cf GmSSLJNI.jar GmSSLJNI.class
-add_jar(GmSSLJNI
-	VERSION 2.1.0-dev
-	ENTRY_POINT org.gmssl.GmSSLJNI
-	GENERATE_NATIVE_HEADERS
-	OUTPUT_DIR ${CMAKE_CURRENT_BINARY_DIR}
-	SOURCES src/main/java/org/gmssl/GmSSLJNI.java
-		src/main/java/org/gmssl/GmSSLException.java
-		src/main/java/org/gmssl/Random.java
-		src/main/java/org/gmssl/Sm3.java
-		src/main/java/org/gmssl/Sm3Hmac.java
-		src/main/java/org/gmssl/Sm3Pbkdf2.java
-		src/main/java/org/gmssl/Sm4.java
-		src/main/java/org/gmssl/Sm4Cbc.java
-		src/main/java/org/gmssl/Sm4Ctr.java
-		src/main/java/org/gmssl/Sm4Gcm.java
-		src/main/java/org/gmssl/Zuc.java
-		src/main/java/org/gmssl/Sm2Key.java
-		src/main/java/org/gmssl/Sm2Signature.java
-		src/main/java/org/gmssl/Sm2Certificate.java
-		src/main/java/org/gmssl/Sm9EncMasterKey.java
-		src/main/java/org/gmssl/Sm9EncKey.java
-		src/main/java/org/gmssl/Sm9SignMasterKey.java
-		src/main/java/org/gmssl/Sm9SignKey.java
-		src/main/java/org/gmssl/Sm9Signature.java
-		src/main/java/org/gmssl/NativeLoader.java
-	)
+# Set the Maven command to be executed
+set(MAVEN_COMMAND "mvn clean package test")
+# Execute Maven command
+execute_process(
+    COMMAND ${MAVEN_COMMAND}
+    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+    RESULT_VARIABLE MAVEN_RESULT
+)
+# Check if the Maven command was successfully executed
+if(NOT MAVEN_RESULT EQUAL "0")
+    message(FATAL_ERROR "Maven execute failed: ${MAVEN_OUTPUT}")
+endif()
+
+# Copy the generated jar package to the build directory
+set(jarName "GmSSLJNI-2.1.0-dev.jar")
+file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/target/${jarName}
+    DESTINATION ${CMAKE_CURRENT_BINARY_DIR}
+)
 
 enable_testing()
 
@@ -59,6 +48,6 @@ set(certfile
 "-----END CERTIFICATE-----\n")
 file(WRITE ${CMAKE_CURRENT_BINARY_DIR}/ROOTCA.pem ${certfile})
 
-# java -cp GmSSLJNI.jar org.gmssl.GmSSLJNI
-add_test(NAME main COMMAND java -cp GmSSLJNI.jar -Djava.library.path=./ org.gmssl.GmSSLJNI)
+add_test(NAME main COMMAND java -cp ${jarName} org.gmssl.GmSSLJNI)
+
 

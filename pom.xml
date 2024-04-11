@@ -1,7 +1,7 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 https://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <groupId>org.gmssl</groupId>
-    <artifactId>GmSSL-Java</artifactId>
+    <artifactId>GmSSLJNI</artifactId>
     <version>2.1.0-dev</version>
     <name>GmSSL-Java</name>
     <packaging>jar</packaging>
@@ -14,7 +14,7 @@
         <skipTests>false</skipTests>
 
         <cmake.compile.config>Debug</cmake.compile.config>
-        <!--Generated library name, without the suffix format, and prefixed with the string 'lib'. -->
+        <!--Generated library name, without the suffix format, and prefixed with the string 'lib'. Keep the content consistent with what is loaded in GmSSLJNI.java.-->
         <libName>gmssljni</libName>
         <!--The include directory and the location of the lib directory after installing gmssl. Please adjust according to your own situation. -->
         <winIncludePath>C:/Program Files/GmSSL/include</winIncludePath>
@@ -23,17 +23,9 @@
         <linuxLibPath>/usr/local/lib</linuxLibPath>
         <macIncludePath>/usr/local/include</macIncludePath>
         <macLibPath>/usr/local/lib</macLibPath>
-        <!--The address of the gmssl library referenced in the generated library call chain in the macOS environment.
-        The call chain situation can be viewed using the otool -L tool. -->
-        <macReferencedLib>/usr/local/lib/libgmssl.3.dylib</macReferencedLib>
     </properties>
 
     <dependencies>
-        <dependency>
-            <groupId>org.apache.maven</groupId>
-            <artifactId>maven-model</artifactId>
-            <version>3.9.6</version>
-        </dependency>
         <dependency>
             <groupId>junit</groupId>
             <artifactId>junit</artifactId>

@@ -56,7 +56,7 @@ GmSSL-Java依赖GmSSL项目，在编译前需要先在系统上编译、安装�
 
 ### CMake编译安装
 
-采用CMake编译工具链，需要在系统上安装基础的GCC编译工具链、CMake和Java环境，在Ubuntu/Debian系统上可以执行如下命令安装依赖的工具。
+采用CMake编译工具链，需要在系统上安装基础的GCC编译工具链、CMake、Java和Maven环境，在Ubuntu/Debian系统上可以执行如下命令安装依赖的工具。
 
 ```bash
 sudo apt update
@@ -87,7 +87,7 @@ Test project /path/to/GmSSL-Java/build
 Total Test time (real) =   2.27 sec
 ```
 
-此时查看`build`目录下可以看到生成的本地动态库`libgmssljni`和GmSSLJNI的Jar包`GmSSLJNI.jar`、`GmSSLJNI-2.1.0-dev.jar`。
+此时查看`build`目录下可以看到生成的本地动态库`libgmssljni`和GmSSLJNI的Jar包`GmSSLJNI-2.1.0-dev.jar`。
 
 ### Maven编译安装
 
@@ -98,10 +98,7 @@ java -version
 echo $JAVA_HOME
 ```
 
-确认和修改项目编译打包参数，参数位置在pom.xml中properties的path相关内容。GmSSL如在默认路径安装情况下只需确认即可。
-MacOS环境下依赖库macReferencedLib为方便统一编译打包而进行配置，本项目生成库引用关系可通过otool -L命令查看，也可以通过下面命令修正本项目生成库的实际引用关系，
-install_name_tool -change /path/xxx/libgmssl.3.dylib @rpath/libgmssl.3.dylib /project/xxx/libgmssljni.dylib
- ，此时macReferencedLib参数可不必配置。
+确认和修改项目编译时打包参数，参数位置在pom.xml中properties的path相关内容。GmSSL如在默认路径安装情况下只需确认。
 ```
 winIncludePath         设置Windows系统下依赖的GmSSL的头信息路径地址
 winLibPath         设置Windows系统下依赖的GmSSL的库信息路径地址
@@ -109,6 +106,12 @@ linuxIncludePath         设置Linux系统下依赖的GmSSL的头信息路径地
 linuxLibPath         设置Linux系统下依赖的GmSSL的库信息路径地址
 macIncludePath         设置MacOS系统下依赖的GmSSL的头信息路径地址
 macLibPath         设置MacOS系统下依赖的GmSSL的库信息路径地址
+```
+
+MacOS环境下在resources目录config.properties设置了生成库的引用库macReferencedLib，为方便项目运行进行配置，本项目生成库引用关系可通过otool -L命令查看，也可以通过下面命令修正本项目生成库的实际引用关系，
+install_name_tool -change /path/xxx/libgmssl.3.dylib @rpath/libgmssl.3.dylib /project/xxx/libgmssljni.dylib
+，此时macReferencedLib参数可不必配置。
+```
 macReferencedLib         设置MacOS系统下依赖的GmSSL相关的引用库信息路径地址
 ```
 
@@ -116,7 +119,7 @@ macReferencedLib         设置MacOS系统下依赖的GmSSL相关的引用库信
 ```shell
 mvn clean install
 ```
-最终会执行单元测试并在target目录下生成GmSSL-Java-2.1.0-dev.jar
+最终会执行单元测试并在target目录下生成GmSSLJNI-2.1.0-dev.jar
 
 ## 开发手册
 
