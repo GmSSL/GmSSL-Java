@@ -8,14 +8,11 @@
  */
 package org.gmssl;
 
-import org.apache.maven.model.Model;
-import org.apache.maven.model.io.xpp3.MavenXpp3Reader;
-import org.codehaus.plexus.util.xml.pull.XmlPullParserException;
-
 import java.io.*;
-import java.net.URL;
-import java.util.Set;
-import java.util.concurrent.CopyOnWriteArraySet;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.StandardCopyOption;
+import java.util.Properties;
 
 /**
  * @author yongfei.li
@@ -25,49 +22,43 @@ import java.util.concurrent.CopyOnWriteArraySet;
  */
 public class NativeLoader {
 
-    private static final Set<String> LOADED_LIBARAY_SET=new CopyOnWriteArraySet<>();
-
     /* custom jni library prefix path relative to project resources */
     private static final String RESOURCELIB_PREFIXPATH = "lib";
 
+    static final String GMSSLJNILIB_NAME="libgmssljni";
+
+    private static final Properties PROPERTIES = new Properties();
+
+    static {
+        try (InputStream input = NativeLoader.class.getClassLoader().getResourceAsStream("config.properties")) {
+            if (input == null) {
+                throw new GmSSLException("can't find config file: config.properties");
+            }
+            PROPERTIES.load(input);
+        } catch (IOException e) {
+            e.printStackTrace();
+            throw new GmSSLException("can't load config file: config.properties");
+        }
+    }
+
     /**
-     * load jin lib:
-     * load personal jni library,the path must be a full path relative to the operating system,the lib file extension must be given too.
-     * load custom jni library,the default path is resources/lib of this project,load the corresponding class library according to the operating system.
-     * load the corresponding system jni library according to the operating system.
-     * @param libaray ... lib path  eg:/home/lib/libxxx.so,/gmssl/libxxx,libxxx
+     * load jni lib from resources path,the parameter does not contain the path and suffix.
+     * @param libaray libarayName
      *
      */
-    public synchronized static void load (String... libaray){
-        if(null == libaray || libaray.length<1){
-            throw new GmSSLException("Library is empty exception!");
-        }
-        for(String lib:libaray){
-            if(LOADED_LIBARAY_SET.contains(lib)){
-                continue;
+    public synchronized static void load (String libaray){
+        String resourceLibPath = RESOURCELIB_PREFIXPATH + "/" + libaray + "." + libExtension();
+        try (InputStream inputStream = NativeLoader.class.getClassLoader().getResourceAsStream(resourceLibPath)) {
+            if (null == inputStream) {
+                throw new GmSSLException("lib file not found in JAR: " + resourceLibPath);
             }
-            //load personal jni library,the path must be a full path relative to the operating system,the lib file extension must be given too. eg:/home/lib/libxxx.so
-            File personalLibFile = new File(lib).getAbsoluteFile();
-            if(personalLibFile.exists() && personalLibFile.isFile()){
-                loadLibFile(personalLibFile,lib);
-            }else{
-                //load custom jni library,the default path is resources/lib of this project,load the corresponding class library according to the operating system.
-                String resourceLibPath=RESOURCELIB_PREFIXPATH;
-                resourceLibPath+="/"+lib+"."+libExtension();
-                URL resourceUrl = NativeLoader.class.getClassLoader().getResource(resourceLibPath);
-                if(null !=resourceUrl){
-                    loadLibFile(new File(resourceUrl.getFile()),lib);
-                }else{
-                    //load the corresponding system jni library according to the operating system. eg:libxxx
-                    String[] sysLibPathS = System.getProperty("java.library.path").split(File.pathSeparator);
-                    for(String sysLibPath:sysLibPathS){
-                        File sysLibFile = new File(sysLibPath, lib+"."+libExtension()).getAbsoluteFile();
-                        loadLibFile(sysLibFile,lib);
-                        break;
-                    }
-                }
-            }
-
+            Path tempFile = Files.createTempFile(libaray, "."+libExtension());
+            tempFile.toFile().deleteOnExit();
+            Files.copy(inputStream, tempFile, StandardCopyOption.REPLACE_EXISTING);
+            checkReferencedLib();
+            System.load(tempFile.toAbsolutePath().toString());
+        } catch (Exception e) {
+            throw new GmSSLException("Unable to load lib from JAR");
         }
     }
 
@@ -93,7 +84,6 @@ public class NativeLoader {
             os="osx";
         }
         return os;
-
     }
 
     /**
@@ -115,53 +105,21 @@ public class NativeLoader {
         return libExtension;
     }
 
-    /**
-     * Load the library based on the address of the lib file.
-     * @param file
-     * @param libName
-     */
-    private static void loadLibFile(File file,String libName){
-        if (file.exists() && file.isFile()) {
-            checkReferencedLib(file.getName());
-            System.load(file.getAbsolutePath());
-            LOADED_LIBARAY_SET.add(libName);
-        }else{
-            throw new GmSSLException("lib file is not found!");
-        }
-    }
 
     /**
      * In macOS systems, the execution of library calls relies on loading gmssl.3.dylib from the installed gmssl library,
      * in order to correct the @rpath path issue. Alternatively, you can manually execute the command
      * "install_name_tool -change @rpath/libgmssl.3.dylib /usr/local/lib/libgmssl.3.dylib xxx/lib/libgmssljni.dylib" to fix the library reference path issue.
      * This has already been loaded and manual execution is unnecessary.
-     * @param libName
+     *
      */
-   private static void checkReferencedLib(String libName){
-        String macLibName=getPomProperty("libName")+".dylib";
-       if(libName.endsWith(macLibName)){
-           String macReferencedLib=getPomProperty("macReferencedLib");
-           if(null!=macReferencedLib && !LOADED_LIBARAY_SET.contains(macReferencedLib)){
+   private static void checkReferencedLib(){
+       if("osx".equals(osType())){
+           String macReferencedLib=PROPERTIES.getProperty("macReferencedLib");
+           if(null!=macReferencedLib){
                System.load(macReferencedLib);
-               LOADED_LIBARAY_SET.add(macReferencedLib);
            }
        }
-   }
-
-    /**
-     * Get the value of the property attribute in the pom.xml file
-     * @param property
-     * @return property value
-     */
-   public static String getPomProperty(String property){
-       String propertyValue;
-       try {
-           Model model = new MavenXpp3Reader().read(new FileReader("pom.xml"));
-           propertyValue= model.getProperties().getProperty(property);
-       } catch (IOException | XmlPullParserException e) {
-           throw new GmSSLException("An exception occurred while reading the pom file!");
-       }
-       return propertyValue;
    }
 
 }
