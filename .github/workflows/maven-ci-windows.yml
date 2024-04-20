@@ -37,8 +37,8 @@ jobs:
         mkdir build;
         cd build;
         cmake .. -G "NMake Makefiles"
-        nmake;
-        nmake install;
+        make .;
+        make install;
     
     - name: Build with Maven
       run: sudo mvn -B  -X  package --file pom.xml
