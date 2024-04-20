@@ -36,8 +36,8 @@ jobs:
         cd GmSSL;
         mkdir build;
         cd build;
-        cmake .. -G "NMake Makefiles"
-        make .;
+        cmake .. -G "Make Makefiles"
+        make ;
         make install;
     
     - name: Build with Maven
