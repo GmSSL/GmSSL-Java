@@ -32,16 +32,20 @@ jobs:
         
     - name: install dependencies
       run: choco install cmake --installargs 'ADD_CMAKE_TO_PATH=System'
-      
+
+    - name: Install Visual Studio Build tools
+      run: |
+        choco install visualstudio2019buildtools --package-parameters "--add Microsoft.VisualStudio.Component.VC.Tools.x86.x64"
+        
     - name: Build GmSSL
       run : |
         git clone https://github.com/guanzhi/GmSSL.git;
         cd GmSSL;
         mkdir build;
         cd build;
-        cmake .. -G "Make Makefiles";
+        cmake .. -G "NMake Makefiles";
         nmake ;
         nmake install;
     
     - name: Build with Maven
-      run: sudo mvn -B  -X  package --file pom.xml
+      run: mvn -B -X package --file pom.xml
