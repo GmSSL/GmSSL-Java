@@ -29,11 +29,6 @@ jobs:
         distribution: 'temurin'
         cache: maven
         
-    - name: Set up Maven
-      uses: stCarolas/setup-maven@4735c2f70a2762c6594c64c6c4192fdf86920d0d
-      with:
-        maven-version: '3.8.3'
-        
     - name: Build GmSSL
       run : |
         git clone https://github.com/guanzhi/GmSSL.git
