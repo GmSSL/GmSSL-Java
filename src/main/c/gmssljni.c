@@ -994,7 +994,7 @@ JNIEXPORT jint JNICALL Java_org_gmssl_GmSSLJNI_sm4_1ctr_1decrypt_1init(
 		error_print();
 		goto end;
 	}
-	if (sm4_ctr_decrypt_init((SM4_CTR_CTX *)sm4_ctr_ctx, (uint8_t *)keybuf, (uint8_t *)ivbuf) != 1) {
+	if (sm4_ctr_encrypt_init((SM4_CTR_CTX *)sm4_ctr_ctx, (uint8_t *)keybuf, (uint8_t *)ivbuf) != 1) {
 		error_print();
 		goto end;
 	}
@@ -1044,7 +1044,7 @@ JNIEXPORT jint JNICALL Java_org_gmssl_GmSSLJNI_sm4_1ctr_1decrypt_1update(
 		error_print();
 		goto end;
 	}
-	if (sm4_ctr_decrypt_update((SM4_CTR_CTX *)sm4_ctr_ctx, (uint8_t *)inbuf + in_offset, (size_t)inlen,
+	if (sm4_ctr_encrypt_update((SM4_CTR_CTX *)sm4_ctr_ctx, (uint8_t *)inbuf + in_offset, (size_t)inlen,
 		(uint8_t *)outbuf + out_offset, &outlen) != 1) {
 		error_print();
 		goto end;
@@ -1083,7 +1083,7 @@ JNIEXPORT jint JNICALL Java_org_gmssl_GmSSLJNI_sm4_1ctr_1decrypt_1finish(
 		error_print();
 		goto end;
 	}
-	if (sm4_ctr_decrypt_finish((SM4_CTR_CTX *)sm4_ctr_ctx,
+	if (sm4_ctr_encrypt_finish((SM4_CTR_CTX *)sm4_ctr_ctx,
 		(uint8_t *)outbuf + offset, &outlen) != 1) {
 		error_print();
 		goto end;
