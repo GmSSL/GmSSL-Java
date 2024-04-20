@@ -6,7 +6,7 @@
 # separate terms of service, privacy policy, and support
 # documentation.
 
-name: CI with Maven 
+name: Maven CI-Windows
 
 on:
   push:
