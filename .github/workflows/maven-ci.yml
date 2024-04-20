@@ -6,27 +6,34 @@
 # separate terms of service, privacy policy, and support
 # documentation.
 
-name: Java CI with Maven
+name: CI with Maven 
 
 on:
   push:
     branches: [ "main" ]
   pull_request:
     branches: [ "main" ]
+env:
+  # Customize the CMake build type here (Release, Debug, RelWithDebInfo, etc.)
+  BUILD_TYPE: Release
 
 jobs:
   build:
-
-    runs-on: ubuntu-latest
-
+    strategy:
+      matrix:
+        os: [ ubuntu-latest, windows-latest, macos-latest ]
+    runs-on: ${{ matrix.os }}
+    
     steps:
     - uses: actions/checkout@v3
+    
     - name: Set up JDK 17
       uses: actions/setup-java@v3
       with:
         java-version: '17'
         distribution: 'temurin'
         cache: maven
+        
     - name: Build GmSSL
       run : git clone https://github.com/guanzhi/GmSSL.git; cd GmSSL; mkdir build; cd build; cmake ..; make;sudo make install;sudo ldconfig
     
