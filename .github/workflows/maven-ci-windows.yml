@@ -30,13 +30,9 @@ jobs:
         distribution: 'temurin'
         cache: maven
         
-    - name: install dependencies
-      run: choco install cmake --installargs 'ADD_CMAKE_TO_PATH=System'
-
-    - name: Install Visual Studio Build tools
-      run: |
-        choco install visualstudio2019buildtools --package-parameters "--add Microsoft.VisualStudio.Component.VC.Tools.x86.x64"
-        
+    - name: setup-msbuild
+      uses: microsoft/setup-msbuild@v2
+      
     - name: Build GmSSL
       run : |
         git clone https://github.com/guanzhi/GmSSL.git;
