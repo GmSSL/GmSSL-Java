@@ -30,6 +30,9 @@ jobs:
         distribution: 'temurin'
         cache: maven
         
+    - name: install dependencies
+      run: choco install cmake --installargs 'ADD_CMAKE_TO_PATH=System'
+      
     - name: Build GmSSL
       run : |
         git clone https://github.com/guanzhi/GmSSL.git;
@@ -37,8 +40,8 @@ jobs:
         mkdir build;
         cd build;
         cmake .. -G "Make Makefiles";
-        make ;
-        make install;
+        nmake ;
+        nmake install;
     
     - name: Build with Maven
       run: sudo mvn -B  -X  package --file pom.xml
