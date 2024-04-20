@@ -31,7 +31,7 @@ jobs:
         cache: maven
         
     - name: Build GmSSL
-      run : git clone https://github.com/guanzhi/GmSSL.git; cd GmSSL; mkdir build; cd build; cmake ..; make;sudo make install
+      run : git clone https://github.com/guanzhi/GmSSL.git; cd GmSSL; mkdir build; cd build; cmake ..; make;make install
     
     - name: Build with Maven
       run: sudo mvn -B package --file pom.xml
