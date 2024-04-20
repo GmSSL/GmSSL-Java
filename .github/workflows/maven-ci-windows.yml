@@ -47,4 +47,5 @@ jobs:
         nmake install;
     
     - name: Build with Maven
-      run: mvn -B -X package --file pom.xml
+      run: mvn clean install
+
