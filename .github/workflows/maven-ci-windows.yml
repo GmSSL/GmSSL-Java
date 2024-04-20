@@ -7,7 +7,7 @@
 # separate terms of service, privacy policy, and support
 # documentation.
 
-name: Maven CI-macos
+name: Maven CI-windows
 on:
   push:
     branches: [ "main" ]
