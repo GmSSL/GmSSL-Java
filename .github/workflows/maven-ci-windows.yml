@@ -32,13 +32,17 @@ jobs:
         
     - name: Build GmSSL
       run : |
-        git clone https://github.com/guanzhi/GmSSL.git
-        cd GmSSL
-        mkdir build
-        cd build
-        cmake ..
-        make
-        make install
+        git clone https://github.com/guanzhi/GmSSL.git;
+        cd GmSSL;
+        dir;
+        mkdir build;
+        dir;
+        cd build;
+        dir;
+        cmake ..;
+        dir;
+        make;
+        make install;
     
     - name: Build with Maven
       run: sudo mvn -B  -X  package --file pom.xml
