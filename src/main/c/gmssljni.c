@@ -18,7 +18,6 @@
 #include <gmssl/zuc.h>
 #include <gmssl/mem.h>
 #include <gmssl/rand.h>
-#include <gmssl/aead.h>
 #include <gmssl/x509.h>
 #include <gmssl/error.h>
 #include <gmssl/version.h>
