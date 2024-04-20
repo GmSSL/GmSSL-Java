@@ -36,7 +36,7 @@ jobs:
         cd GmSSL;
         mkdir build;
         cd build;
-        cmake .. -G "Make Makefiles"
+        cmake .. -G "Make Makefiles";
         make ;
         make install;
     
