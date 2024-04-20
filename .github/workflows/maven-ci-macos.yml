@@ -33,6 +33,7 @@ jobs:
       run : |
         git clone https://github.com/guanzhi/GmSSL.git
         cd GmSSL
+        git checkout v3.1.1
         mkdir build
         cd build
         cmake ..
