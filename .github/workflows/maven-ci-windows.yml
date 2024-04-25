@@ -1,0 +1,51 @@
+
+# This workflow will build a Java project with Maven, and cache/restore any dependencies to improve the workflow execution time
+# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-java-with-maven
+
+# This workflow uses actions that are not certified by GitHub.
+# They are provided by a third-party and are governed by
+# separate terms of service, privacy policy, and support
+# documentation.
+
+name: Maven CI-windows
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+env:
+  BUILD_TYPE: Release
+
+jobs:
+  build:
+    runs-on: windows-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Configure build for x86
+      uses: ilammy/msvc-dev-cmd@v1
+      with:
+        arch: amd64_x86
+          
+    - name: Set up JDK 18
+      uses: actions/setup-java@v2
+      with:
+        java-version: '18'
+        distribution: 'temurin'
+        cache: maven
+        
+      
+    - name: Build GmSSL
+      run : |
+        git clone https://github.com/guanzhi/GmSSL.git;
+        cd GmSSL;
+        mkdir build;
+        cd build;
+        cmake .. -G "NMake Makefiles" -DWIN32=ON;
+        nmake ;
+        nmake install;
+    
+    - name: Build with Maven
+      run: mvn clean install
+
