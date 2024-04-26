@@ -13,10 +13,24 @@ extern "C" {
 #define org_gmssl_GmSSLJNI_SM3_HMAC_SIZE 32L
 #undef org_gmssl_GmSSLJNI_SM3_HMAC_MIN_KEY_SIZE
 #define org_gmssl_GmSSLJNI_SM3_HMAC_MIN_KEY_SIZE 16L
+#undef org_gmssl_GmSSLJNI_SM3_PBKDF2_MIN_ITER
+#define org_gmssl_GmSSLJNI_SM3_PBKDF2_MIN_ITER 10000L
+#undef org_gmssl_GmSSLJNI_SM3_PBKDF2_MAX_ITER
+#define org_gmssl_GmSSLJNI_SM3_PBKDF2_MAX_ITER 16777216L
+#undef org_gmssl_GmSSLJNI_SM3_PBKDF2_MAX_SALT_SIZE
+#define org_gmssl_GmSSLJNI_SM3_PBKDF2_MAX_SALT_SIZE 64L
+#undef org_gmssl_GmSSLJNI_SM3_PBKDF2_DEFAULT_SALT_SIZE
+#define org_gmssl_GmSSLJNI_SM3_PBKDF2_DEFAULT_SALT_SIZE 8L
+#undef org_gmssl_GmSSLJNI_SM3_PBKDF2_MAX_KEY_SIZE
+#define org_gmssl_GmSSLJNI_SM3_PBKDF2_MAX_KEY_SIZE 256L
 #undef org_gmssl_GmSSLJNI_SM4_KEY_SIZE
 #define org_gmssl_GmSSLJNI_SM4_KEY_SIZE 16L
 #undef org_gmssl_GmSSLJNI_SM4_BLOCK_SIZE
 #define org_gmssl_GmSSLJNI_SM4_BLOCK_SIZE 16L
+#undef org_gmssl_GmSSLJNI_SM4_CBC_IV_SIZE
+#define org_gmssl_GmSSLJNI_SM4_CBC_IV_SIZE 16L
+#undef org_gmssl_GmSSLJNI_SM4_CTR_IV_SIZE
+#define org_gmssl_GmSSLJNI_SM4_CTR_IV_SIZE 16L
 #undef org_gmssl_GmSSLJNI_SM4_GCM_MIN_IV_SIZE
 #define org_gmssl_GmSSLJNI_SM4_GCM_MIN_IV_SIZE 1L
 #undef org_gmssl_GmSSLJNI_SM4_GCM_MAX_IV_SIZE
@@ -136,6 +150,14 @@ JNIEXPORT jint JNICALL Java_org_gmssl_GmSSLJNI_sm3_1hmac_1update
  */
 JNIEXPORT jint JNICALL Java_org_gmssl_GmSSLJNI_sm3_1hmac_1finish
   (JNIEnv *, jclass, jlong, jbyteArray);
+
+/*
+ * Class:     org_gmssl_GmSSLJNI
+ * Method:    sm3_pbkdf2
+ * Signature: (Ljava/lang/String;[BII)[B
+ */
+JNIEXPORT jbyteArray JNICALL Java_org_gmssl_GmSSLJNI_sm3_1pbkdf2
+  (JNIEnv *, jclass, jstring, jbyteArray, jint, jint);
 
 /*
  * Class:     org_gmssl_GmSSLJNI

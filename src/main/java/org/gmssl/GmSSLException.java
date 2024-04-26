@@ -9,6 +9,9 @@
 
 package org.gmssl;
 
+/**
+ * @author gmssl
+ */
 public class GmSSLException extends RuntimeException {
 
 	public GmSSLException(String reason) {

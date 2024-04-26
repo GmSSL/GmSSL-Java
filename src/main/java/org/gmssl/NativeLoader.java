@@ -12,6 +12,7 @@ import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.StandardCopyOption;
+import java.util.Optional;
 import java.util.Properties;
 
 /**
@@ -116,9 +117,14 @@ public class NativeLoader {
    private static void checkReferencedLib(){
        if("osx".equals(osType())){
            String macReferencedLib=PROPERTIES.getProperty("macReferencedLib");
-           if(null!=macReferencedLib){
-               System.load(macReferencedLib);
+           Optional<String> optionalStr = Optional.ofNullable(macReferencedLib);
+           if(optionalStr.isPresent() && !optionalStr.get().isEmpty()){
+               File libFile = new File(macReferencedLib);
+               if(libFile.exists()){
+                   System.load(macReferencedLib);
+               }
            }
+
        }
    }
 

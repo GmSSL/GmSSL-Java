@@ -8,12 +8,6 @@ GmSSL-Java是采用JNI (Java Native Interface)方式实现的，也就是说所�
 
 因为GmSSL-Java以JNI方式实现，GmSSL-Java不仅包含Java语言实现的Java类库（Jar包），还包括C语言实现的本地库（libgmssljni动态库），其中libgmssljni这个本地库是Java接口类库和GmSSL库(libgmssl)之间的胶水层，应用部署时还需要保证系统中已经安全了GmSSL库。虽然看起来这种实现方式比纯Java实现的类似更麻烦，而且因为包含C编译的本地代码，这个类库也失去了Java代码一次编译到处运行的跨平台能力，但是这是密码库的主流实现方式。相对于纯Java实现来说，GmSSL-Java可以充分利用成熟和功能丰富的GmSSL库，在性能、标准兼容性上都更有优势，并且可以随着GmSSL主项目的升级获得功能和性能上的升级。
 
-## 下载
-
-* GmSSL-Java主分支源代码 [GmSSL-Java-main.zip](https://github.com/GmSSL/GmSSL-Java/archive/refs/heads/main.zip) (版本号：2.1.0 dev)
-* 依赖的GmSSL库主分支源代码 [GmSSL-master.zip](https://github.com/guanzhi/GmSSL/archive/refs/heads/master.zip) (版本号：3.1.1 Dev)]
-* GitHub主页：https://github.com/GmSSL/GmSSL-Java
-
 ## 项目构成
 
 GmSSL的项目组成主要包括C语言的本地代码、`src`目录下的Java类库代码、`examples`目录下面的例子代码。其中只有本地代码和`src`下面的Java类库代码会参与默认的编译，生成动态库和Jar包，而`examples`下的例子默认不编译也不进入Jar包。
@@ -47,65 +41,35 @@ GmSSL-Java提供一个包`org.gmssl`，其中包含如下密码算法类
 	<img src="https://contrib.rocks/image?repo=GmSSL/GmSSL-Java" />
 </a>
 
+## 下载
+
+### 主页
+* GmSSL-Java主页 [GmSSL-Java](https://github.com/GmSSL/GmSSL-Java)
+* 依赖的GmSSL库主页 [GmSSL](https://github.com/guanzhi/GmSSL)
+
+### 最新发布
+* GmSSL-Java发布页，支持windows、Linux、MacOS多平台 [GmSSL-Java](https://github.com/GmSSL/GmSSL-Java/releases)
+* 依赖的GmSSL发布页，包含windows、Linux、MacOS多平台 [GmSSL](https://github.com/guanzhi/GmSSL/releases)
+* 当前最新发布版本 3.1.1 
+    [GmSSL-Java](https://github.com/GmSSL/GmSSL-Java/archive/refs/heads/main.zip)
+    [GmSSL](https://github.com/guanzhi/GmSSL/archive/refs/tags/v3.1.1.zip)
 
 ## 编译和安装
 
-GmSSL-Java依赖GmSSL项目，在编译前需要先在系统上编译、安装并测试通过GmSSL库及工具。请在https://github.com/guanzhi/GmSSL 项目上下载最新的GmSSL代码，并完成编译、测试和安装。
+### 编译安装GmSSL
+GmSSL-Java依赖GmSSL项目，在编译前需要先在系统上编译、安装并测试通过GmSSL库及工具。请在https://github.com/guanzhi/GmSSL 项目上下载最新发布的GmSSL代码，并完成编译、测试和安装。
 
-首先下载最新的GmSSL-Java代码。
+### Maven编译安装GmSSL-java
 
-### CMake编译安装
-
-采用CMake编译工具链，需要在系统上安装基础的GCC编译工具链、CMake、Java和Maven环境，在Ubuntu/Debian系统上可以执行如下命令安装依赖的工具。
-
-```bash
-sudo apt update
-sudo apt install build-essential cmake default-jdk
-```
-
-安装完成后可以通过CMake编译
-
-```bash
-mkdir build
-cd build
-cmake ..
-make
-make test
-```
-
-编译并测试成功后可以显示
-
-```bash
-$ make test
-Running tests...
-Test project /path/to/GmSSL-Java/build
-    Start 1: main
-1/1 Test #1: main .............................   Passed    2.27 sec
-
-100% tests passed, 0 tests failed out of 1
-
-Total Test time (real) =   2.27 sec
-```
-
-此时查看`build`目录下可以看到生成的本地动态库`libgmssljni`和GmSSLJNI的Jar包`GmSSLJNI-2.1.0-dev.jar`。
-
-### Maven编译安装
-
-检查JAVA环境变量是否配置正确
+检查JAVA、Maven、gmssl的C库环境变量是否配置正确
 ```shell
 java -version
 # MacOS系统可用如下命令再次确认以检查配置是否成功，路径是否正确
 echo $JAVA_HOME
-```
-
-确认和修改项目编译时打包参数，参数位置在pom.xml中properties的path相关内容。GmSSL如在默认路径安装情况下只需确认。
-```
-winIncludePath         设置Windows系统下依赖的GmSSL的头信息路径地址
-winLibPath         设置Windows系统下依赖的GmSSL的库信息路径地址
-linuxIncludePath         设置Linux系统下依赖的GmSSL的头信息路径地址
-linuxLibPath         设置Linux系统下依赖的GmSSL的库信息路径地址
-macIncludePath         设置MacOS系统下依赖的GmSSL的头信息路径地址
-macLibPath         设置MacOS系统下依赖的GmSSL的库信息路径地址
+# 检查Maven环境变量，能正常输出
+mvn -v
+# 检查gmssl环境变量，能正常输出
+gmssl version
 ```
 
 MacOS环境下在resources目录config.properties设置了生成库的引用库macReferencedLib，为方便项目运行进行配置，本项目生成库引用关系可通过otool -L命令查看，也可以通过下面命令修正本项目生成库的实际引用关系，
@@ -119,7 +83,17 @@ macReferencedLib         设置MacOS系统下依赖的GmSSL相关的引用库信
 ```shell
 mvn clean install
 ```
-最终会执行单元测试并在target目录下生成GmSSLJNI-2.1.0-dev.jar
+最终会执行单元测试并在target目录下生成相应版本jar包。
+
+## 使用
+在其他项目中使用GmSSL-java，只需在pom.xml中添加如下依赖：
+```xml
+<dependency>
+    <groupId>com.gmssl</groupId>
+    <artifactId>GmSSLJNI</artifactId>
+    <version>3.1.1</version>
+</dependency>
+``` 
 
 ## 开发手册
 
