@@ -42,7 +42,7 @@ jobs:
       run: |
         Expand-Archive -Path "GmSSL-v3.1.1.zip" -DestinationPath "GmSSL"
 
-    - name: Build GmSSL
+    - name: Build GmSSL 
       run: |
         cd GmSSL;
         cd GmSSL-3.1.1;
@@ -52,7 +52,7 @@ jobs:
         nmake ;
         nmake install;
   
-    - name: Build GmSSL
+    - name: Set PATH entry
       shell: cmd
       run: |
         echo "##vso[task.prependpath]C:\Program Files\GmSSL\bin"
@@ -60,7 +60,8 @@ jobs:
     - name: Use PATH entry
       shell: cmd
       run: |
-        gmssl version
+        echo $env:PATH;
+        gmssl version;
     
     - name: Build with Maven
       run: mvn clean install
