@@ -55,7 +55,7 @@ jobs:
     - name: Set PATH entry
       shell: cmd
       run: |
-        $env:PATH += ";C:\\Program Files\\GmSSL\bin"
+        $env:PATH += ";C:\\Program Files\\GmSSL\\bin"
         echo "PATH updated to: $env:PATH"
         
     - name: Verify PATH entry
