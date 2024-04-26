@@ -44,7 +44,7 @@ jobs:
 
     - name: Build GmSSL
       run: |
-        cd GmSSL-3.1.1
+        cd GmSSL;
         mkdir build;
         cd build;
         cmake .. -G "NMake Makefiles" -DWIN32=ON;
