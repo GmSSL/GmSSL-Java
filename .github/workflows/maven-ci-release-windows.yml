@@ -51,10 +51,17 @@ jobs:
         cmake .. -G "NMake Makefiles" -DWIN32=ON;
         nmake ;
         nmake install;
-        $env:PATH += ";C:\Program Files\GmSSL\bin";
-        echo $env:PATH;
-        gmssl version;
-
+  
+    - name: Build GmSSL
+      shell: cmd
+      run: |
+        echo "##vso[task.prependpath]C:\Program Files\GmSSL\bin"
+        
+    - name: Use PATH entry
+      shell: cmd
+      run: |
+        gmssl version
+    
     - name: Build with Maven
       run: mvn clean install
       
