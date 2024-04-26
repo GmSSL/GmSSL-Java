@@ -55,13 +55,13 @@ jobs:
     - name: Set PATH entry
       shell: cmd
       run: |
-        echo "##vso[task.prependpath]C:\Program Files\GmSSL\bin"
+        $env:PATH += ";C:\\Program Files\\GmSSL\bin"
+        echo "PATH updated to: $env:PATH"
         
-    - name: Use PATH entry
+    - name: Verify PATH entry
       shell: cmd
       run: |
-        echo $env:PATH;
-        gmssl version;
+        gmssl version
     
     - name: Build with Maven
       run: mvn clean install
