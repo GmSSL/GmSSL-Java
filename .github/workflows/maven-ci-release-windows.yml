@@ -57,6 +57,7 @@ jobs:
       run: |
         $env:PATH += ";C:\\Program Files\\GmSSL\\bin"
         echo "PATH updated to: $env:PATH"
+        gmssl version
         
     - name: Verify PATH entry
       shell: cmd
