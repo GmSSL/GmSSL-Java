@@ -20,7 +20,7 @@ jobs:
     runs-on: windows-latest
 
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v3
     
     - name: Configure build for x86
       uses: ilammy/msvc-dev-cmd@v1
@@ -36,11 +36,11 @@ jobs:
     
     - name: Download GmSSL release
       run: |
-        Invoke-WebRequest -Uri "https://github.com/guanzhi/GmSSL/archive/refs/tags/v3.1.1.zip" -OutFile "GmSSL-v3.1.1.zip"
+        Invoke-WebRequest -Uri "https://github.com/guanzhi/GmSSL/archive/refs/tags/v3.1.1.zip" -OutFile "GmSSL.zip"
 
     - name: Extract GmSSL
       run: |
-        Expand-Archive -Path "GmSSL-v3.1.1.zip" -DestinationPath "GmSSL"
+        Expand-Archive -Path "GmSSL.zip" -DestinationPath "."
 
     - name: Build GmSSL 
       run: |
@@ -52,14 +52,12 @@ jobs:
         nmake ;
         nmake install;
   
-    - name: Set PATH entry
+    - name: Set up environment
       shell: cmd
       run: |
-        $env:PATH += ";C:\\Program Files\\GmSSL\\bin"
-        echo "PATH updated to: $env:PATH"
-        gmssl version
+        echo "C:\Program Files\GmSSL\bin" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8 -InputObject "Path += ';'"
         
-    - name: Verify PATH entry
+    - name: Verify Installation and Environment
       shell: cmd
       run: |
         gmssl version
@@ -71,4 +69,4 @@ jobs:
       if: always()
       run: |
         Remove-Item -Recurse -Force GmSSLjava-version: '18'
-        Remove-Item GmSSL-v3.1.1.zip
+        Remove-Item GmSSL.zip
