@@ -54,7 +54,7 @@ jobs:
     - name: Set up environment
       shell: cmd
       run: |
-        echo "C:\Program Files\GmSSL\bin" | Out-File -FilePath $env:GITHUB_ENV -Append -Encoding utf8 -InputObject "Path += ';'"
+        echo "Path += ';C:\Program Files\GmSSL\bin'" >> $Env:GITHUB_ENV
         
     - name: Verify Installation and Environment
       shell: cmd
