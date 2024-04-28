@@ -52,12 +52,12 @@ jobs:
         nmake install;
   
     - name: Set up environment
-      shell: cmd
+      shell: pwsh
       run: |
         echo "Path += ';C:\Program Files\GmSSL\bin'" >> $Env:GITHUB_ENV
         
     - name: Verify Installation and Environment
-      shell: cmd
+      shell: pwsh
       run: |
         gmssl version
     
