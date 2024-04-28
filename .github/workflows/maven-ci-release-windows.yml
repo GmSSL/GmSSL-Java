@@ -54,7 +54,7 @@ jobs:
     - name: Set up environment
       shell: pwsh
       run: |
-        echo "Path += ';C:\Program Files\GmSSL\bin'" >> $Env:GITHUB_ENV
+        echo "C:\Program Files\GmSSL\bin" >> $GITHUB_PATH
         
     - name: Verify Installation and Environment
       shell: pwsh
