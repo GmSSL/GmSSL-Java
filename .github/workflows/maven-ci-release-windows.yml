@@ -33,6 +33,12 @@ jobs:
         java-version: '18'
         distribution: 'temurin'
         cache: maven
+
+    - name: Append path to an environment variable in windows
+      uses: myci-actions/append-to-path-windows@2
+      with:
+        path: C:\Program Files\GmSSL\bin
+        env-var: PATH
     
     - name: Download GmSSL release
       run: |
