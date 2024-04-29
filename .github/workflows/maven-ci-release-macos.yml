@@ -34,9 +34,6 @@ jobs:
         cmake ..
         make
         sudo make install
-        
-    - name: Verify Installation and Environment
-      run: gmssl version
 
     - name: Build with Maven
       run: mvn clean install
