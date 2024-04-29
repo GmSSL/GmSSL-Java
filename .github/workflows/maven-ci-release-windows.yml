@@ -34,7 +34,7 @@ jobs:
         distribution: 'temurin'
         cache: maven
 
-    - name: Append path to an environment variable in windows
+    - name: Set up environment variable in windows
       uses: myci-actions/append-to-path-windows@2
       with:
         path: C:\Program Files\GmSSL\bin
@@ -56,10 +56,6 @@ jobs:
         cmake .. -G "NMake Makefiles" -DWIN32=ON;
         nmake ;
         nmake install;
-  
-    - name: Set up environment
-      run: |
-        echo "C:\Program Files\GmSSL\bin" >> $GITHUB_PATH
         
     - name: Verify Installation and Environment
       run: |
