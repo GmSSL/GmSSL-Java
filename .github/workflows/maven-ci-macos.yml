@@ -35,9 +35,12 @@ jobs:
         cd GmSSL
         mkdir build
         cd build
-        cmake ..
+        cmake .. -DCMAKE_OSX_ARCHITECTURES=x86_64
         make
         sudo make install
+    
+    - name: Set DYLD_LIBRARY_PATH
+      run: echo "DYLD_LIBRARY_PATH=/usr/local/lib:$DYLD_LIBRARY_PATH" >> $GITHUB_ENV
     
     - name: Build with Maven
       run: sudo mvn -B  -X  package --file pom.xml
