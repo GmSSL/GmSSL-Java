@@ -34,7 +34,7 @@ jobs:
         cmake ..
         make
         sudo make install
-        install_name_tool -change /usr/local/lib/libgmssl.3.dylib @rpath/libgmssl.3.dylib /usr/local/lib/libgmssl.dylib
+        sudo install_name_tool -change /usr/local/lib/libgmssl.3.dylib @rpath/libgmssl.3.dylib /usr/local/lib/libgmssl.dylib
         
     - name: Verify Installation and Environment
       run: gmssl version
