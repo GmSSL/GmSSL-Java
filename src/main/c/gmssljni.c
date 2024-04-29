@@ -18,8 +18,10 @@
 #include <gmssl/zuc.h>
 #include <gmssl/mem.h>
 #include <gmssl/rand.h>
+#include <gmssl/aead.h>
 #include <gmssl/x509.h>
 #include <gmssl/error.h>
+#include <gmssl/pbkdf2.h>
 #include <gmssl/version.h>
 #include "gmssljni.h"
 
@@ -348,6 +350,61 @@ JNIEXPORT jint JNICALL Java_org_gmssl_GmSSLJNI_sm3_1hmac_1finish(
 	ret = 1;
 end:
 	(*env)->ReleaseByteArrayElements(env, hmac, buf, mode);
+	return ret;
+}
+
+/*
+ * Class:     org_gmssl_GmSSLJNI
+ * Method:    sm3_pbkdf2
+ * Signature: (Ljava/lang/String;[BII)[B
+ */
+JNIEXPORT jbyteArray JNICALL Java_org_gmssl_GmSSLJNI_sm3_1pbkdf2(
+	JNIEnv *env, jclass this,
+	jstring pass, jbyteArray salt, jint iter, jint keylen)
+{
+	jbyteArray ret = NULL;
+	uint8_t keybuf[256];
+	const char *pass_str = NULL;
+	jbyte *saltbuf = NULL;
+	jlong saltlen;
+
+	if (!(pass_str = (*env)->GetStringUTFChars(env, pass, 0))) {
+		error_print();
+		goto end;
+	}
+	if (iter < PBKDF2_MIN_ITER || iter > PBKDF2_MAX_ITER) {
+		error_print();
+		goto end;
+	}
+	if (!(saltbuf = (*env)->GetByteArrayElements(env, salt, NULL))) {
+		error_print();
+		goto end;
+	}
+	saltlen = (*env)->GetArrayLength(env, salt);
+	if (saltlen < 1 || saltlen > PBKDF2_MAX_SALT_SIZE) {
+		error_print();
+		goto end;
+	}
+	if (keylen < 1 || keylen > sizeof(keybuf)) {
+		error_print();
+		goto end;
+	}
+
+	if (pbkdf2_hmac_sm3_genkey(pass_str, strlen(pass_str),
+		(const uint8_t *)saltbuf, saltlen, iter, keylen, keybuf) != 1) {
+		error_print();
+		goto end;
+	}
+
+	if (!(ret = (*env)->NewByteArray(env, keylen))) {
+		error_print();
+		goto end;
+	}
+	(*env)->SetByteArrayRegion(env, ret, 0, keylen, (jbyte *)keybuf);
+
+end:
+	if (pass_str) (*env)->ReleaseStringUTFChars(env, pass, pass_str);
+	if (saltbuf) (*env)->ReleaseByteArrayElements(env, salt, saltbuf, JNI_ABORT);
 	return ret;
 }
 
@@ -994,7 +1051,7 @@ JNIEXPORT jint JNICALL Java_org_gmssl_GmSSLJNI_sm4_1ctr_1decrypt_1init(
 		error_print();
 		goto end;
 	}
-	if (sm4_ctr_encrypt_init((SM4_CTR_CTX *)sm4_ctr_ctx, (uint8_t *)keybuf, (uint8_t *)ivbuf) != 1) {
+	if (sm4_ctr_decrypt_init((SM4_CTR_CTX *)sm4_ctr_ctx, (uint8_t *)keybuf, (uint8_t *)ivbuf) != 1) {
 		error_print();
 		goto end;
 	}
@@ -1044,7 +1101,7 @@ JNIEXPORT jint JNICALL Java_org_gmssl_GmSSLJNI_sm4_1ctr_1decrypt_1update(
 		error_print();
 		goto end;
 	}
-	if (sm4_ctr_encrypt_update((SM4_CTR_CTX *)sm4_ctr_ctx, (uint8_t *)inbuf + in_offset, (size_t)inlen,
+	if (sm4_ctr_decrypt_update((SM4_CTR_CTX *)sm4_ctr_ctx, (uint8_t *)inbuf + in_offset, (size_t)inlen,
 		(uint8_t *)outbuf + out_offset, &outlen) != 1) {
 		error_print();
 		goto end;
@@ -1083,7 +1140,7 @@ JNIEXPORT jint JNICALL Java_org_gmssl_GmSSLJNI_sm4_1ctr_1decrypt_1finish(
 		error_print();
 		goto end;
 	}
-	if (sm4_ctr_encrypt_finish((SM4_CTR_CTX *)sm4_ctr_ctx,
+	if (sm4_ctr_decrypt_finish((SM4_CTR_CTX *)sm4_ctr_ctx,
 		(uint8_t *)outbuf + offset, &outlen) != 1) {
 		error_print();
 		goto end;

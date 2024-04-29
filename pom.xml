@@ -2,7 +2,7 @@
     <modelVersion>4.0.0</modelVersion>
     <groupId>org.gmssl</groupId>
     <artifactId>GmSSLJNI</artifactId>
-    <version>2.1.0-dev</version>
+    <version>3.1.1</version>
     <name>GmSSL-Java</name>
     <packaging>jar</packaging>
     <description>GmSSL Java SDK</description>
@@ -17,12 +17,6 @@
         <!--Generated library name, without the suffix format, and prefixed with the string 'lib'. Keep the content consistent with what is loaded in GmSSLJNI.java.-->
         <libName>gmssljni</libName>
         <!--The include directory and the location of the lib directory after installing gmssl. Please adjust according to your own situation. -->
-        <winIncludePath>C:/Program Files/GmSSL/include</winIncludePath>
-        <winLibPath>C:/Program Files/GmSSL/lib</winLibPath>
-        <linuxIncludePath>/usr/local/include</linuxIncludePath>
-        <linuxLibPath>/usr/local/lib</linuxLibPath>
-        <macIncludePath>/usr/local/include</macIncludePath>
-        <macLibPath>/usr/local/lib</macLibPath>
     </properties>
 
     <dependencies>
@@ -63,12 +57,6 @@
                                 -->
                             </generator>
                             <environmentVariables>
-                                <winIncludePath>${winIncludePath}</winIncludePath>
-                                <winLibPath>${winLibPath}</winLibPath>
-                                <linuxIncludePath>${linuxIncludePath}</linuxIncludePath>
-                                <linuxLibPath>${linuxLibPath}</linuxLibPath>
-                                <macIncludePath>${macIncludePath}</macIncludePath>
-                                <macLibPath>${macLibPath}</macLibPath>
                                 <libSubFolder>${cmake.compile.config}</libSubFolder>
                                 <libName>${libName}</libName>
                             </environmentVariables>
@@ -98,7 +86,6 @@
                                 ${project.build.directory}/build
                             </projectDirectory>
                             <environmentVariables>
-                                <key>value</key>
                             </environmentVariables>
                         </configuration>
                     </execution>
