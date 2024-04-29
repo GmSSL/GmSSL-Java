@@ -67,5 +67,4 @@ jobs:
     - name: Clean up
       if: always()
       run: |
-        Remove-Item -Recurse -Force GmSSLjava-version: '18'
         Remove-Item GmSSL.zip
