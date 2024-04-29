@@ -31,7 +31,7 @@ jobs:
         cd GmSSL-3.1.1
         mkdir build
         cd build
-        cmake ..
+        cmake .. -DCMAKE_OSX_ARCHITECTURES=x86_64
         make
         sudo make install
     
