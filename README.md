@@ -59,17 +59,15 @@ GmSSL-Java提供一个包`org.gmssl`，其中包含如下密码算法类
 ### 编译安装GmSSL
 GmSSL-Java依赖GmSSL项目，在编译前需要先在系统上编译、安装并测试通过GmSSL库及工具。请在https://github.com/guanzhi/GmSSL 项目上下载最新发布的GmSSL代码，并完成编译、测试和安装。
 
-### Maven编译安装GmSSL-java
+### 通过Maven编译安装GmSSL-java
 
-检查JAVA、Maven、gmssl的C库环境变量是否配置正确
+安装Java开发环境和Maven，检查JAVA、Maven、GmSSL的C库环境变量是否配置正确
+
 ```shell
-java -version
-# MacOS系统可用如下命令再次确认以检查配置是否成功，路径是否正确
-echo $JAVA_HOME
-# 检查Maven环境变量，能正常输出
-mvn -v
-# 检查gmssl环境变量，能正常输出
-gmssl version
+$ java -version
+$ echo $JAVA_HOME
+$ mvn -v
+$ gmssl version
 ```
 
 MacOS环境下在resources目录config.properties设置了生成库的引用库macReferencedLib，为方便项目运行进行配置，本项目生成库引用关系可通过otool -L命令查看，也可以通过下面命令修正本项目生成库的实际引用关系，
@@ -93,7 +91,7 @@ mvn clean install
     <artifactId>GmSSLJNI</artifactId>
     <version>3.1.1</version>
 </dependency>
-``` 
+```
 
 ## 开发手册
 
