@@ -41,7 +41,6 @@ public class Sm4 {
 	}
 
 	public void encrypt(byte[] in, int in_offset, byte[] out, int out_offset) {
-
 		if (in == null
 			|| in_offset < 0
 			|| in_offset + this.BLOCK_SIZE <= 0

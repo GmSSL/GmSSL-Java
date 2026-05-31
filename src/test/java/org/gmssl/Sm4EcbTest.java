@@ -32,7 +32,7 @@ public class Sm4EcbTest {
     @Test
     public void encryptTest(){
         String test_plaintext="gmssl";
-        byte[] paddingPlaintext=pkcs5padding(test_plaintext.getBytes(),Sm4.BLOCK_SIZE);
+        byte[] paddingPlaintext=pkcs7padding(test_plaintext.getBytes(),Sm4.BLOCK_SIZE);
         byte[] encrypted =  encrypt(paddingPlaintext,key);
         //System.out.println("encrypted data："+HexUtil.byteToHex(encrypted));
         Assert.assertNotNull("data is empty exception!",encrypted);
@@ -44,7 +44,7 @@ public class Sm4EcbTest {
         String test_plaintext="gmssl";
         byte[] encrypted =HexUtil.hexToByte(test_hex_chipertext);
         byte[] plaintextArray = decrypt(encrypted,key);
-        byte[] unpaddingPlaintextArray = pkcs5Unpadding(plaintextArray);
+        byte[] unpaddingPlaintextArray = pkcs7UnPadding(plaintextArray);
         String plaintext=new String(unpaddingPlaintextArray);
         //System.out.println("chipertext:"+plaintext);
         Assert.assertEquals("original value is not equal to the expected value after decryption!",plaintext,test_plaintext);
@@ -52,40 +52,40 @@ public class Sm4EcbTest {
 
 
     /**
-     * The purpose of PKCS5Padding is to pad the data to the block size required by the encryption algorithm, ensuring that the data length meets the requirements of the encryption algorithm.
-     * In special cases where the data length is already a multiple of the block size, according to the PKCS5 rule, padding is still added at the end.
+     * The purpose of PKCS7Padding is to pad the data to the block size required by the encryption algorithm, ensuring that the data length meets the requirements of the encryption algorithm.
+     * In special cases where the data length is already a multiple of the block size, according to the PKCS7 rule, padding is still added at the end.
      * This is done to ensure consistent handling of padding during encryption and decryption processes.
-     * @param ciphertextArray 
+     * @param byteArray
      * @param blockSize
-     * @return byte[] ciphertext
+     * @return byte[] padding array
      */
-    private static byte[] pkcs5padding(byte[] ciphertextArray, int blockSize) {
-        int paddingLength = blockSize - (ciphertextArray.length % blockSize);
+    private static byte[] pkcs7padding(byte[] byteArray, int blockSize) {
+        int paddingLength = blockSize - (byteArray.length % blockSize);
         byte[] padding = new byte[paddingLength];
         Arrays.fill(padding, (byte) paddingLength);
-        byte[] result = new byte[ciphertextArray.length + padding.length];
-        System.arraycopy(ciphertextArray, 0, result, 0, ciphertextArray.length);
-        System.arraycopy(padding, 0, result, ciphertextArray.length, padding.length);
+        byte[] result = new byte[byteArray.length + padding.length];
+        System.arraycopy(byteArray, 0, result, 0, byteArray.length);
+        System.arraycopy(padding, 0, result, byteArray.length, padding.length);
         return result;
     }
 
     /**
-     * unpadding the plaintext
-     * @param plaintextArray
-     * @return byte[] plaintext
+     * unPadding the byteArray
+     * @param byteArray
+     * @return byte[] unPadding byteArray
      * @throws IllegalArgumentException
      */
-    private static byte[] pkcs5Unpadding(byte[] plaintextArray) throws IllegalArgumentException {
-        int paddingSize = plaintextArray[plaintextArray.length - 1];
-        if (paddingSize <= 0 || paddingSize > plaintextArray.length) {
-            throw new IllegalArgumentException("Invalid pkcs#5 padding!");
+    private static byte[] pkcs7UnPadding(byte[] byteArray) throws IllegalArgumentException {
+        int paddingSize = byteArray[byteArray.length - 1];
+        if (paddingSize <= 0 || paddingSize > byteArray.length) {
+            throw new IllegalArgumentException("Invalid pkcs#7 padding!");
         }
-        for (int i = plaintextArray.length - paddingSize; i < plaintextArray.length; i++) {
-            if (plaintextArray[i] != paddingSize) {
-                throw new IllegalArgumentException("Invalid pkcs#5 padding!");
+        for (int i = byteArray.length - paddingSize; i < byteArray.length; i++) {
+            if (byteArray[i] != paddingSize) {
+                throw new IllegalArgumentException("Invalid pkcs#7 padding!");
             }
         }
-        return Arrays.copyOfRange(plaintextArray, 0, plaintextArray.length - paddingSize);
+        return Arrays.copyOfRange(byteArray, 0, byteArray.length - paddingSize);
     }
 
 
@@ -113,7 +113,7 @@ public class Sm4EcbTest {
     private static byte[] decrypt(byte[] data, byte[] key) {
         byte[] plaintext=new byte[data.length];
         Sm4 sm4 = new Sm4(key, false);
-        for (int i = 0; i < data.length; i += 16) {
+        for (int i = 0; i < data.length; i += Sm4.BLOCK_SIZE) {
             sm4.encrypt(data, i, plaintext, i);
         }
         return plaintext;

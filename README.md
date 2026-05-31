@@ -12,7 +12,9 @@ GmSSL-Java是采用JNI (Java Native Interface)方式实现的，也就是说所�
 
 GmSSL的项目组成主要包括C语言的本地代码、`src`目录下的Java类库代码、`examples`目录下面的例子代码。其中只有本地代码和`src`下面的Java类库代码会参与默认的编译，生成动态库和Jar包，而`examples`下的例子默认不编译也不进入Jar包。
 
-GmSSL-Java提供一个包`org.gmssl`，其中包含如下密码算法类
+GmSSL-Java提供两种实现，基于JCE的实现和基于java本身的基础实现。
+JCE实现内容在包`org.gmssl.crypto`，可按照JCE调用方式完成各种算法功能，JCE调用可参考项目test目录下的JceTest类。因cipher属于Oracle java的受限“服务”，因此JCE调用前提必须使用[openJDK](https://jdk.java.net/archive/)。
+基础实现内容在包`org.gmssl`，JDK来源不限制，其中包含如下密码算法类
 
 * org.gmssl.Random
 * org.gmssl.Sm3
@@ -57,7 +59,7 @@ GmSSL-Java提供一个包`org.gmssl`，其中包含如下密码算法类
 ## 编译和安装
 
 ### 编译安装GmSSL
-GmSSL-Java依赖GmSSL项目，在编译前需要先在系统上编译、安装并测试通过GmSSL库及工具。请在https://github.com/guanzhi/GmSSL 项目上下载最新发布的GmSSL代码，并完成编译、测试和安装。
+GmSSL-Java依赖GmSSL项目，在编译前需要先在系统上编译、安装并测试通过GmSSL库及工具。请在https://github.com/guanzhi/GmSSL 项目上下载同一版本的GmSSL代码，并完成编译、测试和安装。
 
 ### 通过Maven编译安装GmSSL-java
 
@@ -84,7 +86,7 @@ mvn clean install
 最终会执行单元测试并在target目录下生成相应版本jar包。
 
 ## 使用
-在其他项目中使用GmSSL-java，只需在pom.xml中添加如下依赖：
+以上步骤操作完成后会在本地Maven仓库生成项目相应jar包，在其他项目中使用GmSSL-java，只需在pom.xml中添加如下依赖：
 ```xml
 <dependency>
     <groupId>com.gmssl</groupId>
