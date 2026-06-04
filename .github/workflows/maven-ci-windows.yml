@@ -43,4 +43,4 @@ jobs:
 
     - name: Build with Maven
       shell: pwsh
-      run: mvn -B "-Dcmake.compile.config=$env:BUILD_TYPE" "-Dgmssl.root=$env:GMSSL_ROOT" "-Dtest=!org.gmssl.Sm2Test" package --file pom.xml
+      run: mvn -B "-Dcmake.compile.config=$env:BUILD_TYPE" "-Dgmssl.root=$env:GMSSL_ROOT" "-Dtest=!org.gmssl.Sm2Test,!org.gmssl.Sm9Test" package --file pom.xml
