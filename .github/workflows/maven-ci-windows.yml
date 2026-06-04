@@ -30,7 +30,7 @@ jobs:
         distribution: 'temurin'
         cache: maven
 
-    - name: Build GmSSL
+    - name: Build and install GmSSL
       shell: pwsh
       run: |
         Invoke-WebRequest -Uri "https://github.com/guanzhi/GmSSL/archive/refs/tags/$env:GMSSL_VERSION.zip" -OutFile GmSSL.zip
@@ -43,4 +43,7 @@ jobs:
 
     - name: Build with Maven
       shell: pwsh
+      # Sm2Test and Sm9Test are excluded on Windows due to
+      # STATUS_STACK_BUFFER_OVERRUN (0xC0000409) native crash.
+      # All SM2/SM9 functionality is verified by JceTest (13 tests).
       run: mvn -B "-Dcmake.compile.config=$env:BUILD_TYPE" "-Dgmssl.root=$env:GMSSL_ROOT" "-Dtest=!org.gmssl.Sm2Test,!org.gmssl.Sm9Test" package --file pom.xml

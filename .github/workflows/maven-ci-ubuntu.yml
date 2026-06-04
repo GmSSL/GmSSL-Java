@@ -25,10 +25,10 @@ jobs:
         distribution: 'temurin'
         cache: maven
 
-    - name: Install dependencies
+    - name: Install system dependencies
       run: sudo apt-get update && sudo apt-get install -y cmake build-essential unzip
 
-    - name: Build GmSSL
+    - name: Build and install GmSSL
       run: |
         curl -L "https://github.com/guanzhi/GmSSL/archive/refs/tags/${GMSSL_VERSION}.zip" -o GmSSL.zip
         unzip GmSSL.zip
