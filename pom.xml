@@ -14,6 +14,7 @@
         <skipTests>false</skipTests>
 
         <cmake.compile.config>Debug</cmake.compile.config>
+        <gmssl.root></gmssl.root>
         <!--Generated library name, without the suffix format, and prefixed with the string 'lib'. Keep the content consistent with what is loaded in GmSSLJNI.java.-->
         <libName>gmssljni</libName>
         <!--The include directory and the location of the lib directory after installing gmssl. Please adjust according to your own situation. -->
@@ -65,7 +66,8 @@
                                 Optional: One or more options found at https://cmake.org/cmake/help/v3.22/manual/cmake.1.html
                                 For example:
                                 -->
-                                <option>-DBUILD_THIRDPARTY:bool=on</option>
+                                <option>-DCMAKE_BUILD_TYPE=${cmake.compile.config}</option>
+                                <option>-DGMSSL_ROOT=${gmssl.root}</option>
                             </options>
                         </configuration>
                     </execution>
@@ -77,6 +79,7 @@
                         <configuration>
                             <config>
                                 <!-- Optional: the build configuration (e.g. "x64|Release") -->
+                                ${cmake.compile.config}
                             </config>
                             <target>
                                 <!-- Optional: the build "target" -->
@@ -100,15 +103,6 @@
                     <failOnError>false</failOnError>
                     <filesets>
                         <fileset>
-                            <directory>${basedir}/src/main/resources/lib</directory>
-                            <includes>
-                                <include>*.dll</include>
-                                <include>*.so</include>
-                                <include>*.dylib</include>
-                            </includes>
-                            <followSymlinks>false</followSymlinks>
-                        </fileset>
-                        <fileset>
                             <directory>${basedir}</directory>
                             <includes>
                                 <include>ROOTCA.pem</include>
@@ -116,6 +110,17 @@
                             <followSymlinks>false</followSymlinks>
                         </fileset>
                     </filesets>
+                </configuration>
+            </plugin>
+
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>3.2.5</version>
+                <configuration>
+                    <systemPropertyVariables>
+                        <gmssl.root>${gmssl.root}</gmssl.root>
+                    </systemPropertyVariables>
                 </configuration>
             </plugin>
 
@@ -132,7 +137,7 @@
                             <goal>copy-resources</goal>
                         </goals>
                         <configuration>
-                            <outputDirectory>${project.build.directory}</outputDirectory>
+                            <outputDirectory>${project.build.outputDirectory}</outputDirectory>
                             <resources>
                                 <resource>
                                     <directory>${project.build.directory}/build/${cmake.compile.config}</directory>
@@ -141,23 +146,25 @@
                                         <include>*.so</include>
                                         <include>*.dylib</include>
                                     </includes>
-                                    <targetPath>${basedir}/target/classes/lib</targetPath>
+                                    <targetPath>lib</targetPath>
                                 </resource>
-                                <resource>
-                                    <directory>${project.build.directory}/build/${cmake.compile.config}</directory>
-                                    <includes>
-                                        <include>*.dll</include>
-                                        <include>*.so</include>
-                                        <include>*.dylib</include>
-                                    </includes>
-                                    <targetPath>${basedir}/src/main/resources/lib</targetPath>
-                                </resource>
+                            </resources>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>copy-rootca</id>
+                        <phase>compile</phase>
+                        <goals>
+                            <goal>copy-resources</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${basedir}</outputDirectory>
+                            <resources>
                                 <resource>
                                     <directory>${project.build.directory}/build</directory>
                                     <includes>
                                         <include>ROOTCA.pem</include>
                                     </includes>
-                                    <targetPath>${basedir}</targetPath>
                                 </resource>
                             </resources>
                         </configuration>

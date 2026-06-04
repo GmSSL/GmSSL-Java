@@ -1,37 +1,42 @@
-# This workflow will build a Java project with Maven, and cache/restore any dependencies to improve the workflow execution time
-# For more information see: https://docs.github.com/en/actions/automating-builds-and-tests/building-and-testing-java-with-maven
+name: Maven CI Linux
 
-# This workflow uses actions that are not certified by GitHub.
-# They are provided by a third-party and are governed by
-# separate terms of service, privacy policy, and support
-# documentation.
-
-name: Maven CI-ubuntu
 on:
   push:
     branches: [ "main" ]
   pull_request:
     branches: [ "main" ]
+
 env:
-  # Customize the CMake build type here (Release, Debug, RelWithDebInfo, etc.)
-  BUILD_TYPE: Debug
+  BUILD_TYPE: Release
+  GMSSL_VERSION: v3.1.1
+  GMSSL_ROOT: /usr/local
 
 jobs:
   build:
     runs-on: ubuntu-latest
-    
+
     steps:
-    - uses: actions/checkout@v3
-    
+    - uses: actions/checkout@v4
+
     - name: Set up JDK 17
-      uses: actions/setup-java@v3
+      uses: actions/setup-java@v4
       with:
         java-version: '17'
         distribution: 'temurin'
         cache: maven
-        
+
+    - name: Install dependencies
+      run: sudo apt-get update && sudo apt-get install -y cmake build-essential unzip
+
     - name: Build GmSSL
-      run : git clone https://github.com/guanzhi/GmSSL.git; cd GmSSL; mkdir build; cd build; cmake ..; make;sudo make install;sudo ldconfig
-    
+      run: |
+        curl -L "https://github.com/guanzhi/GmSSL/archive/refs/tags/${GMSSL_VERSION}.zip" -o GmSSL.zip
+        unzip GmSSL.zip
+        cmake -S "GmSSL-${GMSSL_VERSION#v}" -B GmSSL-build -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DCMAKE_INSTALL_PREFIX=${GMSSL_ROOT}
+        cmake --build GmSSL-build --config ${BUILD_TYPE} --parallel
+        sudo cmake --install GmSSL-build --config ${BUILD_TYPE}
+        sudo ldconfig
+        gmssl version
+
     - name: Build with Maven
-      run: sudo mvn -B package --file pom.xml
+      run: mvn -B -Dcmake.compile.config=${BUILD_TYPE} -Dgmssl.root=${GMSSL_ROOT} package --file pom.xml

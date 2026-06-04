@@ -11,10 +11,10 @@ package org.gmssl;
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Optional;
 import java.util.Properties;
 
 /**
@@ -58,6 +58,9 @@ public class NativeLoader {
         Path tempFile = null;
         String resourceLibPath = RESOURCELIB_PREFIXPATH + "/" + library + "." + libExtension();
         try (InputStream inputStream = NativeLoader.class.getClassLoader().getResourceAsStream(resourceLibPath)) {
+            if (inputStream == null) {
+                throw new GmSSLException("lib file not found in classpath: " + resourceLibPath);
+            }
             tempFile = Files.createTempFile(library, "." + libExtension());
             tempFile.toFile().deleteOnExit();
             Files.copy(inputStream, tempFile, StandardCopyOption.REPLACE_EXISTING);
@@ -135,18 +138,29 @@ public class NativeLoader {
      */
     private static void checkReferencedLib() {
         if ("osx".equals(osType())) {
-            String macReferencedLib = PROPERTIES.getProperty("macReferencedLib");
-            if (null != macReferencedLib) {
-                System.load(macReferencedLib);
-                Optional<String> optionalStr = Optional.ofNullable(macReferencedLib);
-                if (optionalStr.isPresent() && !optionalStr.get().isEmpty()) {
-                    File libFile = new File(macReferencedLib);
-                    if (libFile.exists()) {
-                        System.load(macReferencedLib);
-                    }
+            String macReferencedLib = referencedLibFromGmSSLRoot();
+            if (macReferencedLib == null || macReferencedLib.isEmpty()) {
+                macReferencedLib = PROPERTIES.getProperty("macReferencedLib");
+            }
+            if (macReferencedLib != null && !macReferencedLib.isEmpty()) {
+                File libFile = new File(macReferencedLib);
+                if (libFile.exists()) {
+                    System.load(macReferencedLib);
                 }
             }
         }
+    }
+
+    private static String referencedLibFromGmSSLRoot() {
+        String gmsslRoot = System.getProperty("gmssl.root");
+        if (gmsslRoot == null || gmsslRoot.isEmpty()) {
+            gmsslRoot = System.getenv("GMSSL_ROOT");
+        }
+        if (gmsslRoot == null || gmsslRoot.isEmpty()) {
+            return null;
+        }
+        Path libPath = Paths.get(gmsslRoot, "lib", "libgmssl.3.dylib");
+        return libPath.toString();
     }
 
 }
