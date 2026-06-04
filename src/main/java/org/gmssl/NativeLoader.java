@@ -73,10 +73,6 @@ public class NativeLoader {
             throw new GmSSLException("Failed to load native library:"+ e.getMessage());
         } catch (Exception e) {
             throw new GmSSLException("Unable to load lib!");
-        }finally {
-            if (null != tempFile) {
-                tempFile.toFile().delete();
-            }
         }
     }
 
@@ -137,30 +133,34 @@ public class NativeLoader {
      * This has already been loaded and manual execution is unnecessary.
      */
     private static void checkReferencedLib() {
-        if ("osx".equals(osType())) {
-            String macReferencedLib = referencedLibFromGmSSLRoot();
-            if (macReferencedLib == null || macReferencedLib.isEmpty()) {
-                macReferencedLib = PROPERTIES.getProperty("macReferencedLib");
-            }
-            if (macReferencedLib != null && !macReferencedLib.isEmpty()) {
-                File libFile = new File(macReferencedLib);
-                if (libFile.exists()) {
-                    System.load(macReferencedLib);
-                }
-            }
-        }
-    }
-
-    private static String referencedLibFromGmSSLRoot() {
         String gmsslRoot = System.getProperty("gmssl.root");
         if (gmsslRoot == null || gmsslRoot.isEmpty()) {
             gmsslRoot = System.getenv("GMSSL_ROOT");
         }
         if (gmsslRoot == null || gmsslRoot.isEmpty()) {
-            return null;
+            return;
         }
-        Path libPath = Paths.get(gmsslRoot, "lib", "libgmssl.3.dylib");
-        return libPath.toString();
+
+        String os = osType();
+        if ("osx".equals(os)) {
+            // Pre-load libgmssl.3.dylib so that @rpath resolution works
+            String macReferencedLib = PROPERTIES.getProperty("macReferencedLib");
+            if (macReferencedLib == null || macReferencedLib.isEmpty()) {
+                Path libPath = Paths.get(gmsslRoot, "lib", "libgmssl.3.dylib");
+                macReferencedLib = libPath.toString();
+            }
+            File libFile = new File(macReferencedLib);
+            if (libFile.exists()) {
+                System.load(macReferencedLib);
+            }
+        } else if ("win".equals(os)) {
+            // Pre-load gmssl.dll so that the JNI DLL can resolve its dependency
+            Path libPath = Paths.get(gmsslRoot, "bin", "gmssl.dll");
+            File libFile = libPath.toFile();
+            if (libFile.exists()) {
+                System.load(libPath.toString());
+            }
+        }
     }
 
 }
