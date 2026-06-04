@@ -1,69 +1,106 @@
 # GmSSL-Java
 
+[![Maven CI Linux](https://github.com/GmSSL/GmSSL-Java/actions/workflows/maven-ci-ubuntu.yml/badge.svg)](https://github.com/GmSSL/GmSSL-Java/actions/workflows/maven-ci-ubuntu.yml)
+[![Maven CI macOS ARM64](https://github.com/GmSSL/GmSSL-Java/actions/workflows/maven-ci-macos.yml/badge.svg)](https://github.com/GmSSL/GmSSL-Java/actions/workflows/maven-ci-macos.yml)
+[![Maven CI Windows](https://github.com/GmSSL/GmSSL-Java/actions/workflows/maven-ci-windows.yml/badge.svg)](https://github.com/GmSSL/GmSSL-Java/actions/workflows/maven-ci-windows.yml)
+
 ## 简介
 
-本项目是GmSSL密码库的Java语言封装，可以用于Java环境和Android系统上的应用开发。GmSSL-Java目前提供了随机数生成器、SM3哈希、SM3消息认证码(HMAC-SM3)、SM4加密（包括分组加密和CBC/CTR/GCM加密模式）、ZUC加密、SM2加密/签名、SM9加密/签名、SM2证书解析等功能，可以覆盖目前国密算法主要应用开发场景。
+本项目是 [GmSSL](https://github.com/guanzhi/GmSSL) 密码库的Java语言封装，可以用于Java环境和Android系统上的应用开发。GmSSL-Java目前提供了随机数生成器、SM3哈希、SM3消息认证码(HMAC-SM3)、基于SM3的PBKDF2密钥导出、SM4分组加密（支持ECB/CBC/CTR/GCM加密模式）、ZUC序列密码加密、SM2加密/签名、SM2数字证书解析、SM9基于身份加密/签名等功能，可以覆盖目前国密算法主要应用开发场景。
 
-GmSSL-Java是采用JNI (Java Native Interface)方式实现的，也就是说所有底层密码功能（以及消息、文件的编解码等）均为调用GmSSL库实现，因此在功能、标准、性能上和GmSSL的C库、命令行工具几乎完全一致。GmSSL-Java将各种算法封装为独立的Java类，方便应用调用。包含的具体类及功能参见接口说明一节。
+GmSSL-Java是采用JNI (Java Native Interface)方式实现的，所有底层密码功能（以及消息、文件的编解码等）均为调用GmSSL C库实现，因此在功能、标准、性能上和GmSSL的C库、命令行工具几乎完全一致。
 
-因为GmSSL-Java以JNI方式实现，GmSSL-Java不仅包含Java语言实现的Java类库（Jar包），还包括C语言实现的本地库（libgmssljni动态库），其中libgmssljni这个本地库是Java接口类库和GmSSL库(libgmssl)之间的胶水层，应用部署时还需要保证系统中已经安全了GmSSL库。虽然看起来这种实现方式比纯Java实现的类似更麻烦，而且因为包含C编译的本地代码，这个类库也失去了Java代码一次编译到处运行的跨平台能力，但是这是密码库的主流实现方式。相对于纯Java实现来说，GmSSL-Java可以充分利用成熟和功能丰富的GmSSL库，在性能、标准兼容性上都更有优势，并且可以随着GmSSL主项目的升级获得功能和性能上的升级。
+GmSSL-Java提供**两种调用方式**：
+
+1. **基础实现** (`org.gmssl` 包)：直接封装的Java类，API简洁直观，不依赖JCE框架，适用于所有JDK发行版。
+2. **JCE实现** (`org.gmssl.crypto` 包)：基于Java Cryptography Extension (JCE) 标准框架实现，可无缝集成到Spring Security、Tomcat、WebLogic等支持JCE的Java生态组件中。注意：JCE方式需要使用 [OpenJDK](https://jdk.java.net/archive/)。
+
+## 算法支持总览
+
+| 算法类别 | 算法 | 基础实现类 | JCE实现 |
+|---------|------|-----------|---------|
+| 随机数 | 密码安全随机数 | `org.gmssl.Random` | `SecureRandom.Random` |
+| 哈希 | SM3 | `org.gmssl.Sm3` | `MessageDigest.SM3` |
+| 消息认证码 | HMAC-SM3 | `org.gmssl.Sm3Hmac` | `Mac.SM3` |
+| 密钥导出 | SM3-PBKDF2 | `org.gmssl.Sm3Pbkdf2` | `SecretKeyFactory.SM3Pbkdf2` |
+| 分组密码 | SM4 | `org.gmssl.Sm4` | — |
+| 加密模式 | SM4-ECB (PKCS7) | 基于`Sm4`实现 | `Cipher.SM4/ECB/PKCS7Padding` |
+| 加密模式 | SM4-CBC (PKCS5) | `org.gmssl.Sm4Cbc` | `Cipher.SM4/CBC/PKCS5Padding` |
+| 加密模式 | SM4-CTR | `org.gmssl.Sm4Ctr` | `Cipher.SM4/CTR/NoPadding` |
+| 认证加密 | SM4-GCM | `org.gmssl.Sm4Gcm` | `Cipher.SM4/GCM/NoPadding` |
+| 序列密码 | ZUC | `org.gmssl.Zuc` | `Cipher.ZUC` |
+| 公钥密码 | SM2 加密/解密 | `org.gmssl.Sm2Key` | `Cipher.SM2` |
+| 数字签名 | SM2 签名/验签 | `org.gmssl.Sm2Signature` | `Signature.SM2` / `KeyPairGenerator.SM2` |
+| 数字证书 | SM2 证书解析 | `org.gmssl.Sm2Certificate` | 支持 |
+| 基于身份加密 | SM9 加密 | `org.gmssl.Sm9EncMasterKey` / `Sm9EncKey` | `Cipher.SM9` / `KeyPairGenerator.SM9` |
+| 基于身份签名 | SM9 签名 | `org.gmssl.Sm9SignMasterKey` / `Sm9SignKey` / `Sm9Signature` | `Signature.SM9` |
+
+## 平台支持
+
+GmSSL-Java通过GitHub Actions在以下平台上进行持续集成构建和测试：
+
+- **Ubuntu** (Linux x86_64)
+- **macOS** (Apple Silicon ARM64, macos-14)
+- **Windows** (x86_64, MSVC)
+
+同时支持 **Android** 平台（通过 `Dalvik/ART` 运行时检测和 `.so` 动态库加载）。
 
 ## 项目构成
 
-GmSSL的项目组成主要包括C语言的本地代码、`src`目录下的Java类库代码、`examples`目录下面的例子代码。其中只有本地代码和`src`下面的Java类库代码会参与默认的编译，生成动态库和Jar包，而`examples`下的例子默认不编译也不进入Jar包。
-
-GmSSL-Java提供两种实现，基于JCE的实现和基于java本身的基础实现。
-JCE实现内容在包`org.gmssl.crypto`，可按照JCE调用方式完成各种算法功能，JCE调用可参考项目test目录下的JceTest类。因cipher属于Oracle java的受限“服务”，因此JCE调用前提必须使用[openJDK](https://jdk.java.net/archive/)。
-基础实现内容在包`org.gmssl`，JDK来源不限制，其中包含如下密码算法类
-
-* org.gmssl.Random
-* org.gmssl.Sm3
-* org.gmssl.Sm3Hmac
-* org.gmssl.Sm3Pbkdf2
-* org.gmssl.Sm4
-* org.gmssl.Sm4Gcm
-* org.gmssl.Sm4Cbc
-* org.gmssl.Sm4Ctr
-* org.gmssl.Zuc
-* org.gmssl.Sm2Key
-* org.gmssl.Sm2Signature
-* org.gmssl.Sm2Certificate
-* org.gmssl.Sm9EncMasterKey
-* org.gmssl.Sm9EncKey
-* org.gmssl.Sm9SignMasterKey
-* org.gmssl.Sm9SignKey
-* org.gmssl.Sm9Signature
-* org.gmssl.GmSSLException
-
-其中还有一个特殊的`org.gmssl.GmSSLJNI`类，这是底层的JNI封装，不建议用户调用。
+```
+GmSSL-Java/
+├── src/main/
+│   ├── c/              C语言本地JNI胶水代码 (libgmssljni)
+│   ├── java/org/gmssl/
+│   │   ├── *.java      基础密码类库
+│   │   └── crypto/     JCE Provider实现
+│   │       ├── asymmetric/   SM2/SM9 非对称算法
+│   │       ├── symmetric/    SM4/ZUC 对称算法
+│   │       └── digest/       SM3 摘要算法
+│   └── resources/
+│       └── config.properties  本地库配置
+├── examples/           示例代码（不进入Jar包）
+├── src/test/           单元测试
+├── build/              C编译配置文件
+└── pom.xml             Maven项目配置
+```
 
 ## 开发者
 
 <a href="https://github.com/GmSSL/GmSSL-Java/graphs/contributors">
-	<img src="https://contrib.rocks/image?repo=GmSSL/GmSSL-Java" />
+  <img src="https://contrib.rocks/image?repo=GmSSL/GmSSL-Java" />
 </a>
 
 ## 下载
 
 ### 主页
-* GmSSL-Java主页 [GmSSL-Java](https://github.com/GmSSL/GmSSL-Java)
-* 依赖的GmSSL库主页 [GmSSL](https://github.com/guanzhi/GmSSL)
+- GmSSL-Java主页 [GmSSL-Java](https://github.com/GmSSL/GmSSL-Java)
+- 依赖的GmSSL库主页 [GmSSL](https://github.com/guanzhi/GmSSL)
 
 ### 最新发布
-* GmSSL-Java发布页，支持windows、Linux、MacOS多平台 [GmSSL-Java](https://github.com/GmSSL/GmSSL-Java/releases)
-* 依赖的GmSSL发布页，包含windows、Linux、MacOS多平台 [GmSSL](https://github.com/guanzhi/GmSSL/releases)
-* 当前最新发布版本 3.1.1 
-    [GmSSL-Java](https://github.com/GmSSL/GmSSL-Java/archive/refs/heads/main.zip)
-    [GmSSL](https://github.com/guanzhi/GmSSL/archive/refs/tags/v3.1.1.zip)
+- GmSSL-Java发布页 [Releases](https://github.com/GmSSL/GmSSL-Java/releases)
+- 依赖的GmSSL发布页 [GmSSL Releases](https://github.com/guanzhi/GmSSL/releases)
+- 当前版本 **3.1.1**
 
 ## 编译和安装
 
-### 编译安装GmSSL
-GmSSL-Java依赖GmSSL项目，在编译前需要先在系统上编译、安装并测试通过GmSSL库及工具。请在https://github.com/guanzhi/GmSSL 项目上下载同一版本的GmSSL代码，并完成编译、测试和安装。
+### 前置依赖：编译安装GmSSL
 
-### 通过Maven编译安装GmSSL-java
+GmSSL-Java依赖GmSSL C库。编译前需要在系统上先编译安装GmSSL。请从 https://github.com/guanzhi/GmSSL 下载对应版本的GmSSL源码并完成编译和安装。
 
-安装Java开发环境和Maven，检查JAVA、Maven、GmSSL的C库环境变量是否配置正确
+```shell
+# 示例：从源码编译安装GmSSL
+git clone https://github.com/guanzhi/GmSSL.git
+cd GmSSL
+cmake -S . -B build -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr/local
+cmake --build build --config Release --parallel
+sudo cmake --install build --config Release
+gmssl version
+```
+
+### 通过Maven编译安装GmSSL-Java
+
+确保Java开发环境和Maven已安装，并验证环境变量：
 
 ```shell
 $ java -version
@@ -72,27 +109,65 @@ $ mvn -v
 $ gmssl version
 ```
 
-MacOS环境下在resources目录config.properties设置了生成库的引用库macReferencedLib，为方便项目运行进行配置，本项目生成库引用关系可通过otool -L命令查看，也可以通过下面命令修正本项目生成库的实际引用关系，
+**macOS额外配置**：在 `src/main/resources/config.properties` 中可设置 `macReferencedLib` 参数指定GmSSL引用库路径。也可以通过以下命令修正动态库引用路径：
+
+```shell
 install_name_tool -change /path/xxx/libgmssl.3.dylib @rpath/libgmssl.3.dylib /project/xxx/libgmssljni.dylib
-，此时macReferencedLib参数可不必配置。
-```
-macReferencedLib         设置MacOS系统下依赖的GmSSL相关的引用库信息路径地址
 ```
 
-执行Maven编译打包命令
+此时 `macReferencedLib` 参数可不必配置。
+
+执行Maven编译打包命令：
+
 ```shell
 mvn clean install
 ```
-最终会执行单元测试并在target目录下生成相应版本jar包。
+
+此命令会：
+1. 通过CMake编译C语言的JNI本地库 (`libgmssljni`)
+2. 编译Java类库
+3. 执行单元测试
+4. 在 `target` 目录下生成Jar包
 
 ## 使用
-以上步骤操作完成后会在本地Maven仓库生成项目相应jar包，在其他项目中使用GmSSL-java，只需在pom.xml中添加如下依赖：
+
+### Maven依赖
+
+以上步骤操作完成后会在本地Maven仓库生成项目相应Jar包。在其他项目中使用GmSSL-Java，只需在 `pom.xml` 中添加如下依赖：
+
 ```xml
 <dependency>
-    <groupId>com.gmssl</groupId>
+    <groupId>org.gmssl</groupId>
     <artifactId>GmSSLJNI</artifactId>
     <version>3.1.1</version>
 </dependency>
+```
+
+### Native库自动加载
+
+GmSSL-Java 3.1.1 内置了智能的 `NativeLoader` 机制，具备以下特性：
+
+- **自动加载**：从Jar包的 `lib/` 资源目录自动提取并加载对应平台的本地动态库（`.dll` / `.so` / `.dylib`）
+- **防重复加载**：通过 `loadedLibraries` 映射缓存已加载的库，避免重复 `System.load` 导致错误
+- **macOS引用库处理**：自动检测并加载GmSSL依赖库 (`libgmssl.3.dylib`)，支持通过 `gmssl.root` 系统属性或 `GMSSL_ROOT` 环境变量配置路径
+- **异常处理完善**：针对文件不存在、链接错误等场景提供明确的异常信息
+- **外部项目兼容**：修复了从外部项目调用时的路径读取错误
+
+### JCE Provider注册
+
+使用JCE方式时，需要先注册GmSSL安全提供者：
+
+```java
+import java.security.Security;
+import org.gmssl.crypto.GmSSLProvider;
+
+// 注册GmSSL Provider
+Security.addProvider(new GmSSLProvider());
+
+// 之后即可通过标准JCE API调用国密算法
+KeyPairGenerator keyPairGen = KeyPairGenerator.getInstance("SM2", "GmSSL");
+Cipher cipher = Cipher.getInstance("SM4/GCM/NoPadding", "GmSSL");
+Signature signature = Signature.getInstance("SM9", "GmSSL");
 ```
 
 ## 开发手册
@@ -103,9 +178,9 @@ mvn clean install
 
 ```java
 public class Random {
-	public Random();
-	public byte[] randBytes(int len);
-	public void randBytes(byte[] out, int offset, int len);
+  public Random();
+  public byte[] randBytes(int len);
+  public void randBytes(byte[] out, int offset, int len);
 }
 ```
 
@@ -121,12 +196,12 @@ SM3密码杂凑函数可以将任意长度的输入数据计算为固定32字节
 
 ```java
 public class Sm3 {
-	public final static int DIGEST_SIZE = 32;
-		public Sm3();
-		public void reset();
-		public void update(byte[] data, int offset, int len);
-		public void update(byte[] data);
-		public byte[] digest();
+  public final static int DIGEST_SIZE = 32;
+  public Sm3();
+  public void reset();
+  public void update(byte[] data, int offset, int len);
+  public void update(byte[] data);
+  public byte[] digest();
 }
 ```
 
@@ -137,19 +212,19 @@ import org.gmssl.Sm3;
 
 public class Sm3Example {
 
-	public static void main(String[] args) {
+  public static void main(String[] args) {
 
-		Sm3 sm3 = new Sm3();
-		sm3.update("abc".getBytes());
-		byte[] dgst = sm3.digest();
+    Sm3 sm3 = new Sm3();
+    sm3.update("abc".getBytes());
+    byte[] dgst = sm3.digest();
 
-		int i;
-		System.out.printf("sm3('abc'): ");
-		for (i = 0; i < dgst.length; i++) {
-			System.out.printf("%02x", dgst[i]);
-		}
-		System.out.print("\n");
-	}
+    int i;
+    System.out.printf("sm3('abc'): ");
+    for (i = 0; i < dgst.length; i++) {
+      System.out.printf("%02x", dgst[i]);
+    }
+    System.out.print("\n");
+  }
 }
 ```
 
@@ -189,7 +264,7 @@ byte[] dgst = sm3.digest();
 sm3.update("Hello world!".getBytes());
 ```
 
-如果需要哈希的数据来自于某个字节数据的一部分（比如某个数据报文的正文部分），那么可以使用`public void update(byte[] data, int offset, int len)`这个接口，可以通过提供字节数组的便宜量、长度来表示要计算哈希的数据片段。使用这个接口可以避免复制内存的开销。
+如果需要哈希的数据来自于某个字节数据的一部分（比如某个数据报文的正文部分），那么可以使用`public void update(byte[] data, int offset, int len)`这个接口，可以通过提供字节数组的偏移量、长度来表示要计算哈希的数据片段。使用这个接口可以避免复制内存的开销。
 
 注意，SM3算法也支持生成空数据的哈希值，因此下面的代码片段也是合法的。
 
@@ -223,13 +298,13 @@ HMAC-SM3是基于SM3密码杂凑算法的消息认证码(MAC)算法，消息认�
 
 ```java
 public class Sm3Hmac {
-	public final static int MAC_SIZE = 32;
+  public final static int MAC_SIZE = 32;
 
-	public Sm3Hmac(byte[] key);
-	public void reset(byte[] key);
-	public void update(byte[] data, int offset, int len);
-	public void update(byte[] data);
-	public byte[] generateMac();
+  public Sm3Hmac(byte[] key);
+  public void reset(byte[] key);
+  public void update(byte[] data, int offset, int len);
+  public void update(byte[] data);
+  public byte[] generateMac();
 }
 ```
 
@@ -243,15 +318,15 @@ import org.gmssl.Random;
 
 public class Sm3HmacExample {
 
-	public static void main(String[] args) {
+  public static void main(String[] args) {
 
-		Random rng = new Random();
-		byte[] key = rng.randBytes(Sm3Hmac.MAC_SIZE);
+    Random rng = new Random();
+    byte[] key = rng.randBytes(Sm3Hmac.MAC_SIZE);
 
-		Sm3Hmac sm3hmac = new Sm3Hmac(key);
-		sm3hmac.update("abc".getBytes(), 0, 3);
-		byte[] mac = sm3hmac.generateMac();
-	}
+    Sm3Hmac sm3hmac = new Sm3Hmac(key);
+    sm3hmac.update("abc".getBytes(), 0, 3);
+    byte[] mac = sm3hmac.generateMac();
+  }
 }
 ```
 
@@ -270,23 +345,23 @@ public class Sm3HmacExample {
 ```java
 public class Sm3Pbkdf2 {
 
-	public final static int MAX_SALT_SIZE = GmSSLJNI.SM3_PBKDF2_MAX_SALT_SIZE;
-	public final static int DEFAULT_SALT_SIZE = GmSSLJNI.SM3_PBKDF2_DEFAULT_SALT_SIZE;
-	public final static int MIN_ITER = GmSSLJNI.SM3_PBKDF2_MIN_ITER;
-	public final static int MAX_ITER = GmSSLJNI.SM3_PBKDF2_MAX_ITER;
-	public final static int MAX_KEY_SIZE = GmSSLJNI.SM3_PBKDF2_MAX_KEY_SIZE;
+  public final static int MAX_SALT_SIZE = GmSSLJNI.SM3_PBKDF2_MAX_SALT_SIZE;
+  public final static int DEFAULT_SALT_SIZE = GmSSLJNI.SM3_PBKDF2_DEFAULT_SALT_SIZE;
+  public final static int MIN_ITER = GmSSLJNI.SM3_PBKDF2_MIN_ITER;
+  public final static int MAX_ITER = GmSSLJNI.SM3_PBKDF2_MAX_ITER;
+  public final static int MAX_KEY_SIZE = GmSSLJNI.SM3_PBKDF2_MAX_KEY_SIZE;
 
-	public Sm3Pbkdf2();
-	public byte[] deriveKey(String pass, byte[] salt, int iter, int keylen);
+  public Sm3Pbkdf2();
+  public byte[] deriveKey(String pass, byte[] salt, int iter, int keylen);
 }
 ```
 
 其中核心的密钥导出功能是通过`deriveKey`方法实现的。
 
-* `pass`用于导出密钥的用户口令。
-* `salt`是用于抵御与计算的盐值。这个值需要用随机生成（比如通过`Random`类），并且具有一定的长度。Salt值不需要保密，因此在口令加密数据时，可以直接将这个值附在密文前，传输给接收方。Salt值越长，抵御预计算攻击的效果就更好。例如当Salt为8字节（64比特）长的随机值时，攻击者预计算表就要扩大$2^{64}$倍。`Sm3Pbkdf2`提供一个推荐的Salt值长度`DEFAULT_SALT_SIZE`常量，并且在实现上不支持超过`MAX_SALT_SIZE`长度的Salt值。
-* `iter`参数用于表示在导出密钥时调用SM3算法的循环次数，`iter`值越大，暴力破解的难度越大，但是同时用户在调用这个函数时的开销也增大了。一般来说`iter`值的应该选择在用户可接收延迟情况下的最大值，比如当`iter = 10000`时，用户延迟为100毫秒，但是对于用户来说延迟感受不明显，但是对于暴力攻击者来说`iter = 10000`意味着攻击的开销增加了大约1万倍。`Sm3Pbkdf2`通过`MIN_ITER`和`MAX_ITER`两个常量给出了`iter`值的范围，用户可以根据当前计算机的性能及用户对延迟的可感知度，在这个范围内选择合适的值。
-* `keylen`参数表示希望导出的密钥长度，这个长度不可超过常量`MAX_KEY_SIZE`。
+- `pass`用于导出密钥的用户口令。
+- `salt`是用于抵御预计算的盐值。这个值需要用随机生成（比如通过`Random`类），并且具有一定的长度。Salt值不需要保密，因此在口令加密数据时，可以直接将这个值附在密文前，传输给接收方。Salt值越长，抵御预计算攻击的效果就更好。例如当Salt为8字节（64比特）长的随机值时，攻击者预计算表就要扩大$2^{64}$倍。`Sm3Pbkdf2`提供一个推荐的Salt值长度`DEFAULT_SALT_SIZE`常量，并且在实现上不支持超过`MAX_SALT_SIZE`长度的Salt值。
+- `iter`参数用于表示在导出密钥时调用SM3算法的循环次数，`iter`值越大，暴力破解的难度越大，但是同时用户在调用这个函数时的开销也增大了。一般来说`iter`值的应该选择在用户可接收延迟情况下的最大值，比如当`iter = 10000`时，用户延迟为100毫秒，但是对于用户来说延迟感受不明显，但是对于暴力攻击者来说`iter = 10000`意味着攻击的开销增加了大约1万倍。`Sm3Pbkdf2`通过`MIN_ITER`和`MAX_ITER`两个常量给出了`iter`值的范围，用户可以根据当前计算机的性能及用户对延迟的可感知度，在这个范围内选择合适的值。
+- `keylen`参数表示希望导出的密钥长度，这个长度不可超过常量`MAX_KEY_SIZE`。
 
 下面的例子展示了如何从口令字符串导出一个密钥。
 
@@ -297,19 +372,18 @@ import org.gmssl.Sm4;
 
 public class Sm3Pbkdf2Example {
 
-	public static void main(String[] args) {
+  public static void main(String[] args) {
 
-		Sm3Pbkdf2 kdf = new Sm3Pbkdf2();
+    Sm3Pbkdf2 kdf = new Sm3Pbkdf2();
 
-		Random rng = new Random();
-		byte[] salt = rng.randBytes(Sm3Pbkdf2.DEFAULT_SALT_SIZE);
+    Random rng = new Random();
+    byte[] salt = rng.randBytes(Sm3Pbkdf2.DEFAULT_SALT_SIZE);
 
-		String pass = "P@ssw0rd";
-		byte[] key = kdf.deriveKey(pass, salt, Sm3Pbkdf2.MIN_ITER * 2, Sm4.KEY_SIZE);
-	}
+    String pass = "P@ssw0rd";
+    byte[] key = kdf.deriveKey(pass, salt, Sm3Pbkdf2.MIN_ITER * 2, Sm4.KEY_SIZE);
+  }
 }
 ```
-
 
 ### SM4分组密码
 
@@ -319,16 +393,16 @@ SM4算法是分组密码算法，其密钥长度为128比特（16字节），分
 
 ```java
 public class Sm4 {
-	public final static int KEY_SIZE = 16;
-	public final static int BLOCK_SIZE = 16;
-	public Sm4(byte[] key, boolean do_encrypt);
-	public void encrypt(byte[] in, int inOffset, byte[] out, int outOffset);
+  public final static int KEY_SIZE = 16;
+  public final static int BLOCK_SIZE = 16;
+  public Sm4(byte[] key, boolean do_encrypt);
+  public void encrypt(byte[] in, int inOffset, byte[] out, int outOffset);
 }
 ```
 
 `Sm4`对象在创建时需要提供`KEY_SIZE`字节长度的密钥，以及一个布尔值`do_encrypt`表示是用于加密还是解密。方法`encrypt`根据创建时的选择进行加密或解密，每次调用`encrypt`只处理一个分组，即读入`BLOCK_SIZE`长度的输入，向`out`的`outOffset`偏移量写入16字节的输出。
 
-下面的例子展示SM4分组加密
+下面的例子展示SM4分组加密：
 
 ```java
 import org.gmssl.Sm4;
@@ -337,28 +411,58 @@ import java.util.Arrays;
 
 public class Sm4Example {
 
-	public static void main(String[] args) {
+  public static void main(String[] args) {
 
-		Random rng = new Random();
-		byte[] key = rng.randBytes(Sm4.KEY_SIZE);
-		byte[] plaintext1 = rng.randBytes(Sm4.BLOCK_SIZE);
-		byte[] ciphertext = new byte[Sm4.BLOCK_SIZE];
-		byte[] plaintext2 = new byte[Sm4.BLOCK_SIZE];
+    Random rng = new Random();
+    byte[] key = rng.randBytes(Sm4.KEY_SIZE);
+    byte[] plaintext1 = rng.randBytes(Sm4.BLOCK_SIZE);
+    byte[] ciphertext = new byte[Sm4.BLOCK_SIZE];
+    byte[] plaintext2 = new byte[Sm4.BLOCK_SIZE];
 
-		Sm4 sm4enc = new Sm4(key, true);
-		sm4enc.encrypt(plaintext1, 0, ciphertext, 0);
+    Sm4 sm4enc = new Sm4(key, true);
+    sm4enc.encrypt(plaintext1, 0, ciphertext, 0);
 
-		Sm4 sm4dec = new Sm4(key, false);
-		sm4dec.encrypt(ciphertext, 0, plaintext2, 0);
+    Sm4 sm4dec = new Sm4(key, false);
+    sm4dec.encrypt(ciphertext, 0, plaintext2, 0);
 
-		System.out.println("Decryption success : " + Arrays.equals(plaintext1, plaintext2));
-	}
+    System.out.println("Decryption success : " + Arrays.equals(plaintext1, plaintext2));
+  }
 }
 ```
 
-多次调用`Sm4`的分组加密解密功能可以实现ECB模式，由于ECB模式在消息加密应用场景中并不安全，因此GmSSL中没有提供ECB模式。如果应用需要开发SM4的其他加密模式，也可可以基于`Sm4`类来开发这些模式。
+多次调用`Sm4`的分组加密解密功能可以实现ECB模式（参见下方 SM4-ECB 章节）。由于ECB模式在消息加密应用场景中并不安全，因此GmSSL基础实现中没有提供独立的ECB模式类。如果应用需要开发SM4的其他加密模式，也可基于`Sm4`类来开发这些模式。
 
+### SM4-ECB加密模式
 
+ECB（电子密码本）模式是最基础的分组密码工作模式，将明文按分组大小分块后独立加密。由于相同明文块会生成相同密文块，不适合加密具有重复模式的数据，主要用于密钥加密等特定场景。
+
+GmSSL-Java 在**JCE实现**中提供了带PKCS7填充的SM4-ECB模式：
+
+```java
+Cipher cipher = Cipher.getInstance("SM4/ECB/PKCS7Padding", "GmSSL");
+```
+
+在**基础实现**中，可以通过多次调用`Sm4`类的`encrypt`方法来实现ECB模式。示例代码见 `examples/Sm4EcbExample.java`：
+
+```java
+// 加密：逐分组调用Sm4
+Sm4 sm4enc = new Sm4(key, true);
+for (int i = 0; i < nblocks; i++) {
+    sm4enc.encrypt(plaintext, plaintextOffset, ciphertext, ciphertextOffset);
+    plaintextOffset += Sm4.BLOCK_SIZE;
+    ciphertextOffset += Sm4.BLOCK_SIZE;
+}
+
+// 解密：逐分组调用Sm4
+Sm4 sm4dec = new Sm4(key, false);
+for (int i = 0; i < nblocks; i++) {
+    sm4dec.encrypt(ciphertext, ciphertextOffset, decrypted, decryptedOffset);
+    ciphertextOffset += Sm4.BLOCK_SIZE;
+    decryptedOffset += Sm4.BLOCK_SIZE;
+}
+```
+
+注意：JCE的ECB模式使用PKCS7填充（功能等同于PKCS5Padding），基础实现的ECB方式需要自行处理数据填充和分组对齐。
 
 ### SM4-CBC加密模式
 
@@ -368,14 +472,14 @@ CBC模式是应用最广泛的分组密码加密模式之一，虽然目前不�
 
 ```java
 public class Sm4Cbc {
-	public final static int KEY_SIZE = 16;
-	public final static int IV_SIZE = 16;
-	public final static int BLOCK_SIZE = 16;
+  public final static int KEY_SIZE = 16;
+  public final static int IV_SIZE = 16;
+  public final static int BLOCK_SIZE = 16;
 
-	public Sm4Cbc();
-	public void init(byte[] key, byte[] iv, boolean do_encrypt);
-	public int update(byte[] in, int inOffset, int inlen, byte[] out, int outOffset);
-	public int doFinal(byte[] out, int outOffset);
+  public Sm4Cbc();
+  public void init(byte[] key, byte[] iv, boolean do_encrypt);
+  public int update(byte[] in, int inOffset, int inlen, byte[] out, int outOffset);
+  public int doFinal(byte[] out, int outOffset);
 }
 ```
 
@@ -391,47 +495,47 @@ import org.gmssl.Random;
 
 public class Sm4CbcExample {
 
-	public static void main(String[] args) {
+  public static void main(String[] args) {
 
-		Random rng = new Random();
-		byte[] key = rng.randBytes(Sm4Cbc.KEY_SIZE);
-		byte[] iv = rng.randBytes(Sm4Cbc.IV_SIZE);
-		byte[] ciphertext = new byte[Sm4Cbc.BLOCK_SIZE * 2];
-		byte[] plaintext = new byte[Sm4Cbc.BLOCK_SIZE * 2];
-		int cipherlen;
-		int plainlen;
-		boolean encrypt = true;
-		boolean decrypt = false;
+    Random rng = new Random();
+    byte[] key = rng.randBytes(Sm4Cbc.KEY_SIZE);
+    byte[] iv = rng.randBytes(Sm4Cbc.IV_SIZE);
+    byte[] ciphertext = new byte[Sm4Cbc.BLOCK_SIZE * 2];
+    byte[] plaintext = new byte[Sm4Cbc.BLOCK_SIZE * 2];
+    int cipherlen;
+    int plainlen;
+    boolean encrypt = true;
+    boolean decrypt = false;
 
-		Sm4Cbc sm4cbc = new Sm4Cbc();
+    Sm4Cbc sm4cbc = new Sm4Cbc();
 
-		// Encrypt
-		sm4cbc.init(key, iv, encrypt);
-		cipherlen = sm4cbc.update("abc".getBytes(), 0, 3, ciphertext, 0);
-		cipherlen += sm4cbc.doFinal(ciphertext, cipherlen);
+    // Encrypt
+    sm4cbc.init(key, iv, encrypt);
+    cipherlen = sm4cbc.update("abc".getBytes(), 0, 3, ciphertext, 0);
+    cipherlen += sm4cbc.doFinal(ciphertext, cipherlen);
 
-		// Decrypt
-		sm4cbc.init(key, iv, decrypt);
-		plainlen = sm4cbc.update(ciphertext, 0, cipherlen, plaintext, 0);
-		plainlen += sm4cbc.doFinal(plaintext, plainlen);
-	}
+    // Decrypt
+    sm4cbc.init(key, iv, decrypt);
+    plainlen = sm4cbc.update(ciphertext, 0, cipherlen, plaintext, 0);
+    plainlen += sm4cbc.doFinal(plaintext, plainlen);
+  }
 }
 ```
 
 ### SM4-CTR加密模式
 
-CTR加密模式可以加密任意长度的消息，和CBC模式不同，并不需要采用填充方案，因此SM4-CTR加密输出的密文长度和输入的明文等长。对于存储或传输带宽有限的应用场景，SM4-CTR相对SM4-CBC模式，密文不会增加格外长度。
+CTR加密模式可以加密任意长度的消息，和CBC模式不同，并不需要采用填充方案，因此SM4-CTR加密输出的密文长度和输入的明文等长。对于存储或传输带宽有限的应用场景，SM4-CTR相对SM4-CBC模式，密文不会增加额外长度。
 
 ```java
 public class Sm4Ctr {
-	public final static int KEY_SIZE;
-	public final static int IV_SIZE;
-	public final static int BLOCK_SIZE;
+  public final static int KEY_SIZE;
+  public final static int IV_SIZE;
+  public final static int BLOCK_SIZE;
 
-	public Sm4Ctr();
-	public void init(byte[] key, byte[] iv);
-	public int update(byte[] in, int in_offset, int inlen, byte[] out, int out_offset);
-	public int doFinal(byte[] out, int out_offset);
+  public Sm4Ctr();
+  public void init(byte[] key, byte[] iv);
+  public int update(byte[] in, int in_offset, int inlen, byte[] out, int out_offset);
+  public int doFinal(byte[] out, int out_offset);
 }
 ```
 
@@ -439,7 +543,7 @@ SM4-CTR在加密和解密时计算过程一样，因此`init`方法在初始化�
 
 由于`Sm4Ctr`在加解密时维护了内部的缓冲区，因此`update`的输出长度可能不等于输入长度，应该保证输出缓冲区的长度至少比输入长度长一个`BLOCK_SIZE`长度。
 
-注意 ，SM4-CBC和SM4-CTR模式都不能保证消息的完整性，在使用这两个模式时，应用还需要生成一个独立的HMAC-SM3密钥，并且生成密文的MAC值。
+注意，SM4-CBC和SM4-CTR模式都不能保证消息的完整性，在使用这两个模式时，应用还需要生成一个独立的HMAC-SM3密钥，并且生成密文的MAC值。
 
 ### SM4-GCM认证加密模式
 
@@ -447,16 +551,16 @@ SM4的GCM模式是一种认证加密模式，和CBC、CTR等加密模式的主�
 
 ```java
 public class Sm4Gcm {
-	public final static int KEY_SIZE;
-	public final static int MIN_IV_SIZE;
-	public final static int MAX_IV_SIZE;
-	public final static int DEFAULT_IV_SIZE;
-	public final static int BLOCK_SIZE;
+  public final static int KEY_SIZE;
+  public final static int MIN_IV_SIZE;
+  public final static int MAX_IV_SIZE;
+  public final static int DEFAULT_IV_SIZE;
+  public final static int BLOCK_SIZE;
 
-	public Sm4Gcm();
-	public void init(byte[] key, byte[] iv, byte[] aad, int taglen, boolean do_encrypt);
-	public int update(byte[] in, int inOffset, int inlen, byte[] out, int outOffset);
-	public int doFinal(byte[] out, int outOffset);
+  public Sm4Gcm();
+  public void init(byte[] key, byte[] iv, byte[] aad, int taglen, boolean do_encrypt);
+  public int update(byte[] in, int inOffset, int inlen, byte[] out, int outOffset);
+  public int doFinal(byte[] out, int outOffset);
 }
 ```
 
@@ -470,36 +574,34 @@ import org.gmssl.Random;
 
 public class Sm4GcmExample {
 
-	public static void main(String[] args) {
+  public static void main(String[] args) {
 
-		Random rng = new Random();
-		byte[] key = rng.randBytes(Sm4Gcm.KEY_SIZE);
-		byte[] iv = rng.randBytes(Sm4Gcm.DEFAULT_IV_SIZE);
-		byte[] aad = "Hello:".getBytes();
-		int taglen = Sm4Gcm.MAX_TAG_SIZE;
-		byte[] ciphertext = new byte[64];
-		byte[] plaintext = new byte[64];
-		int cipherlen;
-		int plainlen;
-		boolean encrypt = true;
-		boolean decrypt = false;
+    Random rng = new Random();
+    byte[] key = rng.randBytes(Sm4Gcm.KEY_SIZE);
+    byte[] iv = rng.randBytes(Sm4Gcm.DEFAULT_IV_SIZE);
+    byte[] aad = "Hello:".getBytes();
+    int taglen = Sm4Gcm.MAX_TAG_SIZE;
+    byte[] ciphertext = new byte[64];
+    byte[] plaintext = new byte[64];
+    int cipherlen;
+    int plainlen;
+    boolean encrypt = true;
+    boolean decrypt = false;
 
-		Sm4Gcm sm4gcm = new Sm4Gcm();
+    Sm4Gcm sm4gcm = new Sm4Gcm();
 
-		sm4gcm.init(key, iv, aad, taglen, encrypt);
-		cipherlen = sm4gcm.update("abc".getBytes(), 0, 3, ciphertext, 0);
-		cipherlen += sm4gcm.doFinal(ciphertext, cipherlen);
+    sm4gcm.init(key, iv, aad, taglen, encrypt);
+    cipherlen = sm4gcm.update("abc".getBytes(), 0, 3, ciphertext, 0);
+    cipherlen += sm4gcm.doFinal(ciphertext, cipherlen);
 
-		sm4gcm.init(key, iv, aad, taglen, decrypt);
-		plainlen = sm4gcm.update(ciphertext, 0, cipherlen, plaintext, 0);
-		plainlen += sm4gcm.doFinal(plaintext, plainlen);
-	}
+    sm4gcm.init(key, iv, aad, taglen, decrypt);
+    plainlen = sm4gcm.update(ciphertext, 0, cipherlen, plaintext, 0);
+    plainlen += sm4gcm.doFinal(plaintext, plainlen);
+  }
 }
 ```
 
-通过上面的例子可以看出，SM4-GCM加密模式中可以通过`init`指定了一个不需要加密的字段`aad`，注意`aad`是不会在`update`中输出的。由于GCM模式输出个外的完整性标签，因此`update`和`doFinal`输出的总密文长度会比总的输入明文长度多`taglen`个字节。
-
-
+通过上面的例子可以看出，SM4-GCM加密模式中可以通过`init`指定了一个不需要加密的字段`aad`，注意`aad`是不会在`update`中输出的。由于GCM模式输出额外的完整性标签，因此`update`和`doFinal`输出的总密文长度会比总的输入明文长度多`taglen`个字节。
 
 ### Zuc序列密码
 
@@ -511,22 +613,22 @@ public class Sm4GcmExample {
 
 ```java
 public class Zuc {
-	public final static int KEY_SIZE = 16;
-	public final static int IV_SIZE = 16;
-	public final static int BLOCK_SIZE = 4;
+  public final static int KEY_SIZE = 16;
+  public final static int IV_SIZE = 16;
+  public final static int BLOCK_SIZE = 4;
 
-	public Zuc();
-	public void init(byte[] key, byte[] iv);
-	public int update(byte[] in, int inOffset, int inlen, byte[] out, int outOffset);
-	public int doFinal(byte[] out, int outOffset);
+  public Zuc();
+  public void init(byte[] key, byte[] iv);
+  public int update(byte[] in, int inOffset, int inlen, byte[] out, int outOffset);
+  public int doFinal(byte[] out, int outOffset);
 }
 ```
 
 `Zuc`类的接口说明如下：
 
-* 序列密码通过生成密钥序列和输入数据进行异或操作的方式来加密或解密，因此序列密码的加密和解密的过程一致，因此`Zuc`的`init`方法中不需要格外的参数表明加密还是解密。
-* 由于CTR模式实际上是以分组密码实现了序列密码的能力，因此可以发现`Zuc`和`Sm4Cbc`的接口是完全一致的。
-* ZUC算法内部实现是以32比特字（4字节）为单位进行处理，因此`Zuc`实现加解密过程中也有内部的状态缓冲区，因此`update`的输出长度可能和输入长度不一致，调用方应该保证输出缓冲区长度比输入长度长`BLOCK_SIZE`个字节。注意，`BLOCK_SIZE`的实际值在未来也有可能会变化。
+- 序列密码通过生成密钥序列和输入数据进行异或操作的方式来加密或解密，因此序列密码的加密和解密的过程一致，因此`Zuc`的`init`方法中不需要额外的参数表明加密还是解密。
+- 由于CTR模式实际上是以分组密码实现了序列密码的能力，因此可以发现`Zuc`和`Sm4Ctr`的接口是完全一致的。
+- ZUC算法内部实现是以32比特字（4字节）为单位进行处理，因此`Zuc`实现加解密过程中也有内部的状态缓冲区，因此`update`的输出长度可能和输入长度不一致，调用方应该保证输出缓冲区长度比输入长度长`BLOCK_SIZE`个字节。注意，`BLOCK_SIZE`的实际值在未来也有可能会变化。
 
 下面的例子展示了`Zuc`的加密和解密过程。
 
@@ -536,30 +638,28 @@ import org.gmssl.Random;
 
 public class ZucExample {
 
-	public static void main(String[] args) {
+  public static void main(String[] args) {
 
-		Random rng = new Random();
-		byte[] key = rng.randBytes(Zuc.KEY_SIZE);
-		byte[] iv = rng.randBytes(Zuc.IV_SIZE);
-		byte[] ciphertext = new byte[32];
-		byte[] plaintext = new byte[32];
-		int cipherlen;
-		int plainlen;
+    Random rng = new Random();
+    byte[] key = rng.randBytes(Zuc.KEY_SIZE);
+    byte[] iv = rng.randBytes(Zuc.IV_SIZE);
+    byte[] ciphertext = new byte[32];
+    byte[] plaintext = new byte[32];
+    int cipherlen;
+    int plainlen;
 
-		Zuc zuc = new Zuc();
+    Zuc zuc = new Zuc();
 
-		zuc.init(key, iv);
-		cipherlen = zuc.update("abc".getBytes(), 0, 3, ciphertext, 0);
-		cipherlen += zuc.doFinal(ciphertext, cipherlen);
+    zuc.init(key, iv);
+    cipherlen = zuc.update("abc".getBytes(), 0, 3, ciphertext, 0);
+    cipherlen += zuc.doFinal(ciphertext, cipherlen);
 
-		zuc.init(key, iv);
-		plainlen = zuc.update(ciphertext, 0, cipherlen, plaintext, 0);
-		plainlen += zuc.doFinal(plaintext, plainlen);
-	}
+    zuc.init(key, iv);
+    plainlen = zuc.update(ciphertext, 0, cipherlen, plaintext, 0);
+    plainlen += zuc.doFinal(plaintext, plainlen);
+  }
 }
 ```
-
-
 
 ### SM2
 
@@ -567,36 +667,36 @@ SM2是国密标准中的椭圆曲线公钥密码，包含数字签名算法和�
 
 ```java
 public class Sm2Key {
-	public final static int MAX_PLAINTEXT_SIZE;
-	public final static String DEFAULT_ID;
+  public final static int MAX_PLAINTEXT_SIZE;
+  public final static String DEFAULT_ID;
 
-	public Sm2Key();
-	public void generateKey();
+  public Sm2Key();
+  public void generateKey();
 
-	public void importPrivateKeyInfoDer(byte[] der);
-	public byte[] exportPrivateKeyInfoDer();
-	public void importPublicKeyInfoDer(byte[] der);
-	public byte[] exportPublicKeyInfoDer();
+  public void importPrivateKeyInfoDer(byte[] der);
+  public byte[] exportPrivateKeyInfoDer();
+  public void importPublicKeyInfoDer(byte[] der);
+  public byte[] exportPublicKeyInfoDer();
 
-	public void importEncryptedPrivateKeyInfoPem(String pass, String file);
-	public void exportEncryptedPrivateKeyInfoPem(String pass, String file);
-	public void importPublicKeyInfoPem(String file);
-	public void exportPublicKeyInfoPem(String file);
+  public void importEncryptedPrivateKeyInfoPem(String pass, String file);
+  public void exportEncryptedPrivateKeyInfoPem(String pass, String file);
+  public void importPublicKeyInfoPem(String file);
+  public void exportPublicKeyInfoPem(String file);
 
-	public byte[] computeZ(String id);
-	public byte[] sign(byte[] dgst);
-	public boolean verify(byte[] dgst, byte[] signature);
-	public byte[] encrypt(byte[] plaintext);
-	public byte[] decrypt(byte[] ciphertext);
+  public byte[] computeZ(String id);
+  public byte[] sign(byte[] dgst);
+  public boolean verify(byte[] dgst, byte[] signature);
+  public byte[] encrypt(byte[] plaintext);
+  public byte[] decrypt(byte[] ciphertext);
 }
 ```
 
 需要注意的是，通过构造函数生成的新`Sm2Key`对象是一个空白的对象，可以通过`generateKey`方法生成一个新的密钥对，或者通过导入函数从外部导入密钥。`Sm2Key`一共提供了4个不同的导入方法：
 
-* `importPrivateKeyInfoDer` 从字节数组中导入SM2私钥，因此导入密钥后这个`Sm2Key`对象可以执行签名操作和解密操作，也可以执行验证签名和加密。
-* `importEncryptedPrivateKeyInfoPem` 从加密的PEM文件中导入SM2私钥，因此调用时需要提供PEM文件的路径和解密的口令(Password)。
-* `importPublicKeyInfoDer`从字节数组中导入SM2公钥，因为其中没有私钥，因此这个`Sm2Key`对象不能执行签名和解密操作，只能执行验证签名和加密操作。
-* `importPublicKeyInfoPem`从PEM文件中导入SM2公钥，只需要提供文件的路径，不需要提供口令。
+- `importPrivateKeyInfoDer` 从字节数组中导入SM2私钥，导入密钥后这个`Sm2Key`对象可以执行签名操作和解密操作，也可以执行验证签名和加密。
+- `importEncryptedPrivateKeyInfoPem` 从加密的PEM文件中导入SM2私钥，调用时需要提供PEM文件的路径和解密的口令(Password)。
+- `importPublicKeyInfoDer`从字节数组中导入SM2公钥，因为其中没有私钥，因此这个`Sm2Key`对象不能执行签名和解密操作，只能执行验证签名和加密操作。
+- `importPublicKeyInfoPem`从PEM文件中导入SM2公钥，只需要提供文件的路径，不需要提供口令。
 
 上面四个导入函数也都有对应的导出函数。从字节数组中导入导出DER编码的公钥和私钥和JCE兼容，但是因为私钥需要以明文的方式写入到字节数组中，因此安全性比较低。从PEM文件中导入导出公钥私钥和`gmssl`命令行工具的默认密钥格式一致，并且在处理私钥时安全性更高。因此建议在默认情况下，在导入导出私钥时默认采用加密的PEM文件格式。
 
@@ -616,40 +716,35 @@ Sm2Key pubKey = new Sm2Key();
 pubKey.importPublicKeyInfoDer(publicKeyInfo);
 ```
 
-下面的代码片段展示了`Sm2Key`导出为加密的PEM私钥文件
+下面的代码片段展示了`Sm2Key`导出为加密的PEM私钥文件：
 
 ```java
 priKey.exportEncryptedPrivateKeyInfoPem("Password", "sm2.pem");
 priKey.importEncryptedPrivateKeyInfoPem("Password", "sm2.pem");
-
 ```
 
-用文本编辑器打开`sm2.pem`文件可以看到如下内容
+用文本编辑器打开`sm2.pem`文件可以看到如下内容：
 
 ```
 -----BEGIN ENCRYPTED PRIVATE KEY-----
 MIIBBjBhBgkqhkiG9w0BBQ0wVDA0BgkqhkiG9w0BBQwwJwQQxShg35gP7+BVnsLo
-NzYroAIDAQAAAgEQMAsGCSqBHM9VAYMRAjAcBggqgRzPVQFoAgQQrZf0pC2mC52m
-cEaC9goJUQSBoGENSQLgigHQUFF7qAOnJQP6erD1vTBQYWWD1aiXGFpLvhPunZ3m
-oWOagyqiGmsoV9aSTWMp20ZLiDR+s7pRv8NM0+vspmDUvmb+LUh0zjrrtJqkzr+Q
-kdfrXD9Utsqx+PqrzBw/PRMDIRKrJeUtqtkerCnsSUN3CpnpAMSTnQUrTt1mQXyU
-dDj7NnOwCbab9km8fzbaXfJlWZYZPsyFJqw=
+...
 -----END ENCRYPTED PRIVATE KEY-----
 ```
 
-下面的代码片段展示了`Sm2Key`导出为PEM公钥文件，这是一个标准的PKCS #8 EncryptPrivateKeyInfo类型并且PEM编码的私钥文件格式，`openssl pkeyutil`命令行工具也默认采用这个格式的私钥，但是由于GmSSL在私钥文件中采用SM4-CBC、HMAC-SM3组合加密了SM2的私钥，因此对于默认使用3DES的`openssl`等工具可能无法解密这个私钥（即使这个工具包含SM2算法的实现）。
+下面的代码片段展示了`Sm2Key`导出为PEM公钥文件：
 
 ```java
 pubKey.exportPublicKeyInfoPem("sm2pub.pem");
 pubKey.importPublicKeyInfoPem("sm2pub.pem");
 ```
 
-用文本编辑器打开`sm2pub.pem`文件可以看到如下内容
+用文本编辑器打开`sm2pub.pem`文件可以看到如下内容：
 
 ```
 -----BEGIN PUBLIC KEY-----
 MFkwEwYHKoZIzj0CAQYIKoEcz1UBgi0DQgAEQ05FKjcbwu2LwLHp2bvacYUBUopR
-h143PrNMFNT0lIN5j+5G+sJcgi5UrzmGEZ3mhXtYBTiWhkYaATXLRqygeg==
+...
 -----END PUBLIC KEY-----
 ```
 
@@ -657,50 +752,42 @@ h143PrNMFNT0lIN5j+5G+sJcgi5UrzmGEZ3mhXtYBTiWhkYaATXLRqygeg==
 
 `Sm2Key`类除了`generateKey`方法之外，提供了`computeZ`、`sign`、`verify`、`encrypt`、`decrypt`这几个密码计算相关的方法。
 
-其中`computeZ`是由公钥和用户的字符串ID值计算出一个称为“Z值”的哈希值，用于对消息的签名。由于`Sm2Signature`类中提供了SM2消息签名的完整功能，因此这个`computeZ`方法只是用于实验验证。由于这个计算只需要公钥，因此如果密钥值是通过`importPublicKeyInfoDer`等导入的，也可以成功计算出32字节的哈希值结果。
+其中`computeZ`是由公钥和用户的字符串ID值计算出一个称为"Z值"的哈希值，用于对消息的签名。由于`Sm2Signature`类中提供了SM2消息签名的完整功能，因此这个`computeZ`方法只是用于实验验证。
 
 ```java
 byte[] z = pubKey.computeZ(Sm2Key.DEFAULT_ID);
 ```
 
-类`Sm2Key`的`sign`和`verify`方法实现了SM2签名的底层功能，这两个方法不支持对数据或消息的签名，只能实现对SM3哈希值的签名和验证，并没有实现SM2签名的完整功能。应用需要保证调用时提供的`dgst`参数的字节序列长度为32。只有密码协议的底层开发者才需要调用`computeZ`、`sign`、`verify`这几个底层方法。
+类`Sm2Key`的`sign`和`verify`方法实现了SM2签名的底层功能，这两个方法不支持对数据或消息的签名，只能实现对SM3哈希值的签名和验证。应用需要保证调用时提供的`dgst`参数的字节序列长度为32。
 
 ```java
 Random rng = new Random();
 byte[] dgst = rng.randBytes(Sm3.DIGEST_SIZE);
 
 byte[] sig = priKey.sign(dgst);
-
 boolean verify_ret = pubKey.verify(dgst, sig);
 System.out.println("Verify result = " + verify_ret);
 ```
 
-类`Sm2Key`的`encrypt`和`decrypt`方法实现了SM2加密和解密功能。注意，虽然SM2标准中没有限制加密消息的长度，但是公钥加密应该主要用于加密较短的对称密钥、主密钥等密钥数据，因此GmSSL库中限制了SM2加密消息的最大长度。应用在调用`encrypt`时，需要保证输入的明文长度不超过`MAX_PLAINTEXT_SIZE`的限制。如果需要加密引用层的消息，应该首先生成对称密钥，用SM4-GCM加密消息，再用SM2加密对称密钥。
+类`Sm2Key`的`encrypt`和`decrypt`方法实现了SM2加密和解密功能。注意，虽然SM2标准中没有限制加密消息的长度，但是公钥加密应该主要用于加密较短的对称密钥、主密钥等密钥数据，因此GmSSL库中限制了SM2加密消息的最大长度（`MAX_PLAINTEXT_SIZE = 255`字节）。如果需要加密应用层的消息，应该首先生成对称密钥，用SM4-GCM加密消息，再用SM2加密对称密钥。
 
 ```java
 byte[] ciphertext = pubKey.encrypt("abc".getBytes());
-
 byte[] plaintext = priKey.decrypt(ciphertext);
-
-System.out.printf("Plaintext : ");
-for (i = 0; i < plaintext.length; i++) {
-	System.out.printf("%02x", plaintext[i]);
-}
-System.out.print("\n");
 ```
 
-类`Sm2Signatue`提供了对任意长消息的签名、验签功能。
+类`Sm2Signature`提供了对任意长消息的签名、验签功能。
 
 ```java
 public class Sm2Signature {
-	public final static String DEFAULT_ID;
+  public final static String DEFAULT_ID;
 
-	public Sm2Signature(Sm2Key key, String id, boolean do_sign);
-	public void reset(Sm2Key key, String id, boolean do_sign);
-	public void update(byte[] data, int offset, int len);
-	public void update(byte[] data);
-	public byte[] sign();
-	public boolean verify(byte[] signature);
+  public Sm2Signature(Sm2Key key, String id, boolean do_sign);
+  public void reset(Sm2Key key, String id, boolean do_sign);
+  public void update(byte[] data, int offset, int len);
+  public void update(byte[] data);
+  public byte[] sign();
+  public boolean verify(byte[] signature);
 }
 ```
 
@@ -721,46 +808,36 @@ System.out.println("Verify result = " + verify_ret);
 
 ### SM2数字证书
 
-类`Sm2Certificate`实现了SM2证书的导入、导出、解析和验证等功能。这里的“SM2证书”含义和“RSA证书”类似，是指证书中的公钥字段是SM2公钥，证书中签名字段是SM2签名，证书格式就是标准的X.509v3证书。由于GmSSL库目前只支持SM2签名算法，不支持ECDSA、RSA、DSA等签名算法，因此`Sm2Certificate`类无法支持其他公钥类型的证书。注意，有一种不常见的情况，一个证书可以公钥是SM2公钥而数字签名是RSA签名，这种证书可能是采用RSA公钥的CA中心对SM2证书请求签发而产生的，由于目前GmSSL不支持SM2之外的签名算法，因此`Sm2Certificate`不支持此类证书。
+类`Sm2Certificate`实现了SM2证书的导入、导出、解析和验证等功能。这里的"SM2证书"含义和"RSA证书"类似，是指证书中的公钥字段是SM2公钥，证书中签名字段是SM2签名，证书格式就是标准的X.509v3证书。由于GmSSL库目前只支持SM2签名算法，不支持ECDSA、RSA、DSA等签名算法，因此`Sm2Certificate`类无法支持其他公钥类型的证书。
 
-类`Sm2Certificate`只支持SM2证书的解析和验证等功能，不支持SM2证书的签发和生成，如果应用需要实现证书申请（即生成CSR文件）或者自建CA签发证书功能，那么可以通过GmSSL库或者`gmssl`命令行工具实现，GmSSL-Java目前不考虑支持证书签发、生成的相关功能。
+类`Sm2Certificate`只支持SM2证书的解析和验证等功能，不支持SM2证书的签发和生成。如果应用需要实现证书申请（即生成CSR文件）或者自建CA签发证书功能，可以通过GmSSL库或者`gmssl`命令行工具实现。
 
 ```java
 public class Sm2Certificate {
-	public Sm2Certificate();
-	public byte[] getBytes();
-	public void importPem(String file);
-	public void exportPem(String file);
-	public byte[] getSerialNumber();
-	public String[] getIssuer();
-	public String[] getSubject();
-	public java.util.Date getNotBefore();
-	public java.util.Date getNotAfter();
-	public Sm2Key getSubjectPublicKey();
-	public boolean verifyByCaCertificate(Sm2Certificate caCert, String sm2Id);
+  public Sm2Certificate();
+  public byte[] getBytes();
+  public void importPem(String file);
+  public void exportPem(String file);
+  public byte[] getSerialNumber();
+  public String[] getIssuer();
+  public String[] getSubject();
+  public java.util.Date getNotBefore();
+  public java.util.Date getNotAfter();
+  public Sm2Key getSubjectPublicKey();
+  public boolean verifyByCaCertificate(Sm2Certificate caCert, String sm2Id);
 }
 ```
 
-新生成的`Sm2Certificate`对象中的证书数据为空，必须通过导入证书数据才能实现真正的初始化。证书有很多种不同格式的编码，如二进制DER编码的`crt`文件或者文本PEM编码的`cer`文件或者`pem`文件，有的证书也会把二进制的证书数据编码为一串连续的十六进制字符串，也有的CA会把多个证书构成的证书链封装在一个PKCS#7格式的密码消息中，而这个密码消息可能是二进制的，也可能是PEM编码的。
-
-在这些格式中最常用的格式是本文的PEM格式，这也是`Sm2Certificate`类默认支持的证书格式。下面这个例子中就是一个证书的PEM文件内容，可以看到内容是由文本构成的，并且总是以`-----BEGIN CERTIFICATE-----`一行作为开头，以`-----END CERTIFICATE-----`一行作为结尾。PEM格式的好处是很容易用文本编辑器打开来，容易作为文本被复制、传输，一个文本文件中可以依次写入多个证书，从而在一个文件中包含多个证书或证书链。因此PEM格式也是CA签发生成证书使用的最主流的格式。由于PEM文件中头尾之间的文本就是证书二进制DER数据的BASE64编码，因此PEM文件也很容易和二进制证书进行手动或自动的互相转换。
+新生成的`Sm2Certificate`对象中的证书数据为空，必须通过导入证书数据才能实现真正的初始化。证书最常用的格式是PEM格式，这也是`Sm2Certificate`类默认支持的证书格式。PEM文件内容总是以`-----BEGIN CERTIFICATE-----`一行作为开头，以`-----END CERTIFICATE-----`一行作为结尾。
 
 ```
 -----BEGIN CERTIFICATE-----
 MIIBszCCAVegAwIBAgIIaeL+wBcKxnswDAYIKoEcz1UBg3UFADAuMQswCQYDVQQG
-EwJDTjEOMAwGA1UECgwFTlJDQUMxDzANBgNVBAMMBlJPT1RDQTAeFw0xMjA3MTQw
-MzExNTlaFw00MjA3MDcwMzExNTlaMC4xCzAJBgNVBAYTAkNOMQ4wDAYDVQQKDAVO
-UkNBQzEPMA0GA1UEAwwGUk9PVENBMFkwEwYHKoZIzj0CAQYIKoEcz1UBgi0DQgAE
-MPCca6pmgcchsTf2UnBeL9rtp4nw+itk1Kzrmbnqo05lUwkwlWK+4OIrtFdAqnRT
-V7Q9v1htkv42TsIutzd126NdMFswHwYDVR0jBBgwFoAUTDKxl9kzG8SmBcHG5Yti
-W/CXdlgwDAYDVR0TBAUwAwEB/zALBgNVHQ8EBAMCAQYwHQYDVR0OBBYEFEwysZfZ
-MxvEpgXBxuWLYlvwl3ZYMAwGCCqBHM9VAYN1BQADSAAwRQIgG1bSLeOXp3oB8H7b
-53W+CKOPl2PknmWEq/lMhtn25HkCIQDaHDgWxWFtnCrBjH16/W3Ezn7/U/Vjo5xI
-pDoiVhsLwg==
+...
 -----END CERTIFICATE-----
 ```
 
-通过`gmssl certparse`命令可以打印这个证书的内容
+通过`gmssl certparse`命令可以打印证书内容：
 
 ```bash
 $ gmssl certparse -in ROOTCA.pem
@@ -770,7 +847,6 @@ Certificate
         serialNumber: 69E2FEC0170AC67B
         signature
             algorithm: sm2sign-with-sm3
-            parameters: NULL
         issuer
             countryName: CN
             organizationName: NRCAC
@@ -779,110 +855,72 @@ Certificate
             notBefore: Sat Jul 14 11:11:59 2012
             notAfter: Mon Jul  7 11:11:59 2042
         subject
-            countryName: CN
-            organizationName: NRCAC
-            commonName: ROOTCA
+            ...
         subjectPulbicKeyInfo
-            algorithm
-                algorithm: ecPublicKey
-                namedCurve: sm2p256v1
-            subjectPublicKey
-                ECPoint: 0430F09C6BAA6681C721B137F652705E2FDAEDA789F0FA2B64D4ACEB99B9EAA34E655309309562BEE0E22BB45740AA745357B43DBF586D92FE364EC22EB73775DB
+            algorithm: ecPublicKey
+            namedCurve: sm2p256v1
         extensions
-            Extension
-                extnID: AuthorityKeyIdentifier (2.5.29.35)
-                AuthorityKeyIdentifier
-                    keyIdentifier: 4C32B197D9331BC4A605C1C6E58B625BF0977658
-            Extension
-                extnID: BasicConstraints (2.5.29.19)
-                BasicConstraints
-                    cA: true
-            Extension
-                extnID: KeyUsage (2.5.29.15)
-                KeyUsage: keyCertSign,cRLSign
-            Extension
-                extnID: SubjectKeyIdentifier (2.5.29.14)
-                SubjectKeyIdentifier: 4C32B197D9331BC4A605C1C6E58B625BF0977658
-    signatureAlgorithm
-        algorithm: sm2sign-with-sm3
-        parameters: NULL
-    signatureValue: 304502201B56D22DE397A77A01F07EDBE775BE08A38F9763E49E6584ABF94C86D9F6E479022100DA1C3816C5616D9C2AC18C7D7AFD6DC4CE7EFF53F563A39C48A43A22561B0BC2
+            ...
 ```
-
-可以看到一个证书的主要内容是包含证书持有者信息的tbsCertificate字段，以及权威机构对tbsCertificate字段的签名算法signatureAlgorithm和签名值signatureValue。因为这个证书是SM2证书，因此其中的签名算法是`sm2sign-with-sm3`，签名值是`0x30`开头的DER编码的可变长度签名值。
 
 证书中持有者信息包含如下字段：
 
-* 证书格式的版本号 version，目前版本号应该是第3版，即`v3`。
-* 证书的序列号 serialNumber，早期证书中的序列号是一个递增的整数，但是近年来的证书必须是随机值。、
-* 证书的签名算法 signature，这个字段的值必须和最后的signatureAlgorithm保持一致。
-* 证书签发机构的名字 issuer，通常是一个CA中心，issuer的内容是由多个Key-Value格式的多个字段组合而成，其中的Key包括国家countryName、省stateOrProvinceName、城市localityName、组织organizationName、组织内单位organizationUnitName、常用名commonName等，其中commonName应该是CA机构的名字。
-* 证书的有效期 validity，有效期是由起始时间notBefore和终止时间notAfter两个时间构成的，如果当前时间早于notBefore，说明证书还没有启用，如果当前时间晚于notAfter，说明证书已经过期作废。
-* 证书持有者（证书主体）的名字 subject，这个字段的数据类型和issuer是一样的，一般对于网站服务器证书来说，subject的commonName应该是服务器的域名。
-* 证书持有者的公钥信息subjectPulbicKeyInfo，对于SM2证书来说，公钥算法必须是ecPublicKey并且曲线必须是sm2p256v1，公钥的值是一个编码的椭圆曲线点，这个值总是以`0x04`开头，后跟总共64字节的点的X、Y坐标。
-* 证书中通常还有多个扩展，其中有的扩展是关键的(critical)扩展，有些则不重要，只是提供了参考信息，这里介绍两个比较重要的扩展：
-  * BasicConstraints (2.5.29.19) 扩展，这个扩展标明证书是权威机构的CA证书（比如北京市CA中心）还是普通用户的证书（比如某个网站的证书），如果一个证书中没有包含这个扩展，或者扩展中的`cA: true`字段不存在，那么这个证书不能作为CA证书使用。
-  * KeyUsage (2.5.29.15) 扩展，这个扩展表明证书持有者公钥的用途，类似于驾驶证中的A照、B照、C照等划分大客车、大货车、小客车准驾车型，密钥用途表明证书是否可以签名、加密、签发证书等用途。如果一个数字签名附带的证书中有KeyUsage扩展并且扩展包含的密钥用途只有加密，没有签名，那么这个证书对于这个签名来说就是无效的。
+- 证书格式的版本号 version
+- 证书的序列号 serialNumber
+- 证书的签名算法 signature
+- 证书签发机构的名字 issuer（由countryName、organizationName、commonName等组成）
+- 证书的有效期 validity（notBefore和notAfter）
+- 证书持有者的名字 subject
+- 证书持有者的公钥信息 subjectPulbicKeyInfo
+- 多个扩展字段（BasicConstraints、KeyUsage等）
 
-`Sm2Certificate`类只支持第3版证书的解析，因此没有提供`getVersion`方法获取证书的版本号。GmSSL支持常用扩展的解析和验证，如果某个证书中有GmSSL不支持的非关键扩展，那么GmSSL会忽略这个扩展，如果存在GmSSL不识别或无法验证的关键性扩展，那么GmSSL在解析证书的时候会返回失败，因此如果`Sm2Certificate`类`importPem`成功，说明证书的格式、内容是可以识别的并且是正确的。
-
-拿他其他人提供的证书还必须验证该证书是否有效，首先需要检查证书的有效期。目前很多CA中心的策略是颁发有效期尽可能短的证书（比如3个月有效期），因此拿到的证书很有可能已经过期了。可以通过`getNotBefore`和`getNotAfter`方法获得有效期时间，判断当前时间点是否在有效期范围内。如果要验证过去某个时间点证书支持者的操作是否合法，那么应该检查那个时间点是否在证书的有效期范围内。
-
-对证书最重要的验证之一是这个证书是否是由权威机构签发的。证书用户需要先通过`getIssuer`方法获得签发机构的名字，确认这个签发机构是否可信。例如，如果一个北京市政府机构的证书中的签发机构是一个商业性CA中心，那么这个证书的有效性就是存疑的。在确认CA中心名字（即整个issuer字段）无误之后，还需要通过Issuer字段从可信的渠道获得这个CA中心的证书，然后调用`verifyByCaCertificate`方法，用获得的CA证书验证当前证书中的签名是否正确。在典型的应用中，开发者和软件发行方应该将所有可信的CA中心的证书硬编码到软件中，或者内置到软件或系统的证书库中，避免应用的用户需要手动添加、导入CA证书。
-
-所有的私钥都有泄露的可能，安全性不佳的自建CA有被攻击者渗透的可能，商业性的小CA甚至有被收购、收买的可能，因此有效期范围内的证书也存在被作废的可能。检查证书是否作废主要是通过证书作废列表CRL文件检查，或者通过证书状态在线检查协议OCSP来在线查询。目前`Sm2Certificate`类没有支持证书作为查询的功能，开发者暂时可以通过`GmSSL`库或者`gmssl`命令行工具进行CRL的检查。
-
-在完成所有证书检查之后，应用可以完全信任从证书中读取的持有者身份信息(subject)和支持有的公钥了，这两个信息分别通过`getSubject`和`getSubjectPublicKey`方法获得。
-
-
+证书验证时需要检查有效期（`getNotBefore` / `getNotAfter`）、签发机构（`getIssuer` + `verifyByCaCertificate`），并建议通过CRL或OCSP检查证书是否被作废。在完成所有证书检查之后，应用可以从证书中读取持有者身份信息（`getSubject`）和公钥（`getSubjectPublicKey`）。
 
 ### SM9 基于身份的密码
 
-SM9算法属于基于身份的密码。基于身份的密码是一种“高级”的公钥密码方案，在具备常规公钥密码加密、签名等密码功能的同时，基于身份的密码体系不需要CA中心和数字证书体系。SM9方案的基本原理是，可以由用户的唯一身份ID（如对方的电子邮件地址、域名或ID号等），从系统的全局主密钥中导出对应的私钥或公钥，导出密钥的正确性是由算法保证的，因此在进行加密、验签的时候，只需要获得解密方或签名方的ID即可，不再需要对方的数字证书了。因此如果应用面对的是一个内部的封闭环境，所有参与用户都是系统内用户，那么采用SM9方案而不是SM2证书和CA的方案，可以简化系统的开发、设计和使用，并降低后续CA体系的维护成本。
+SM9算法属于基于身份的密码。基于身份的密码是一种"高级"的公钥密码方案，在具备常规公钥密码加密、签名等密码功能的同时，基于身份的密码体系不需要CA中心和数字证书体系。SM9方案的基本原理是，可以由用户的唯一身份ID（如对方的电子邮件地址、域名或ID号等），从系统的全局主密钥中导出对应的私钥或公钥，导出密钥的正确性是由算法保证的，因此在进行加密、验签的时候，只需要获得解密方或签名方的ID即可，不再需要对方的数字证书了。因此如果应用面对的是一个内部的封闭环境，所有参与用户都是系统内用户，那么采用SM9方案而不是SM2证书和CA的方案，可以简化系统的开发、设计和使用，并降低后续CA体系的维护成本。
 
-对应数字证书体系中的CA中心，SM9体系中也存在一个权威中心，用于生成全局的主密钥(MasterKey)，并且为系统中的每个用户生成、分配用户的私钥。和SM2密钥对一样，SM9的主密钥也包含私钥和公钥，其中主公钥(PublicMasterKey)是可以导出并公开给系统中全体用户的。而SM9中用户的密钥对比较特殊，其中的公钥并不能从私钥中导出，SM9用户密钥需要包含用户的ID起到公钥的作用，在加密和验证签名等密码计算中，真正的用户公钥是在计算中，在运行时通过用户ID从主公钥中导出的。因此从应用的角度看，SM9中用户的公钥就是一个字符串形式的ID。
+对应数字证书体系中的CA中心，SM9体系中也存在一个权威中心，用于生成全局的主密钥(MasterKey)，并且为系统中的每个用户生成、分配用户的私钥。SM9算法体系中包括SM9加密、SM9签名和SM9密钥交换协议，GmSSL-Java中实现了SM9加密和SM9签名，没有实现SM9密钥交换。其中SM9加密功能包含`Sm9EncMasterKey`类和`Sm9EncKey`类，分别实现了SM9加密主密钥和SM9加密用户密钥，SM9签名功能包含`Sm9SignMasterKey`类、`Sm9SignKey`类和`Sm9Signature`类，分别实现了SM9签名主密钥、SM9签名用户密钥和SM9签名功能。
 
-SM9算法体系中包括SM9加密、SM9签名和SM9密钥交换协议，GmSSL-Java中实现了SM9加密和SM9签名，没有实现SM9密钥交换。其中SM9加密功能包含`Sm9EncMasterKey`类和`Sm9EncKey`类，分别实现了SM9加密主密钥和SM9加密用户密钥，SM9签名功能包含`Sm9SignMasterKey`类、`Sm9SignKey`类和`Sm9Signature`类，分别实现了SM9签名主密钥、SM9签名用户密钥和SM9签名功能。
-
-和SM2算法中相同的密钥对既可以用于加密又可以用于签名不同，SM9中加密、签名的主密钥、用户密钥的组成是完全不同的，因此GmSSL中分别实现为不同的类。SM9签名由于需要特殊的哈希过程，因此SM9用户签名私钥不提供直接签哈希值的底层签名功能实现，只能通过`Sm9Signature`实现对消息的签名、验证。
+和SM2算法中相同的密钥对既可以用于加密又可以用于签名不同，SM9中加密、签名的主密钥、用户密钥的组成是完全不同的，因此GmSSL中分别实现为不同的类。
 
 SM9加密主密钥由类`Sm9EncMasterKey`实现。
 
 ```java
 public class Sm9EncMasterKey {
 
-	public final static int MAX_PLAINTEXT_SIZE;
+  public final static int MAX_PLAINTEXT_SIZE;
 
-	public Sm9SEncMasterKey();
-	public void generateMasterKey();
-	public Sm9EncKey extractKey(String id);
-	public void importEncryptedMasterKeyInfoPem(String pass, String file);
-	public void exportEncryptedMasterKeyInfoPem(String pass, String file);
-	public void importPublicMasterKeyPem(String file);
-	public void exportPublicMasterKeyPem(String file);
-	public byte[] encrypt(byte[] plaintext, String id);
+  public Sm9EncMasterKey();
+  public void generateMasterKey();
+  public Sm9EncKey extractKey(String id);
+  public void importEncryptedMasterKeyInfoPem(String pass, String file);
+  public void exportEncryptedMasterKeyInfoPem(String pass, String file);
+  public void importPublicMasterKeyPem(String file);
+  public void exportPublicMasterKeyPem(String file);
+  public byte[] encrypt(byte[] plaintext, String id);
 }
 ```
 
 `Sm9EncMasterKey`的接口包括：
 
-* 主密钥的生成`generateMasterKey`
-* 主密钥的导入`importEncryptedMasterKeyInfoPem`和导出`exportEncryptedMasterKeyInfoPem`，注意`Sm2Key`的对应接口类似，这里主密钥都是以口令加密的方式导出到文件上的
-* 主公钥（主密钥的公钥部分）的导入`importPublicMasterKeyPem`和导出`exportPublicMasterKeyPem`
-* 用户私钥的生成`extractKey`
-* 数据加密`encrypt`
+- 主密钥的生成`generateMasterKey`
+- 主密钥的导入`importEncryptedMasterKeyInfoPem`和导出`exportEncryptedMasterKeyInfoPem`
+- 主公钥（主密钥的公钥部分）的导入`importPublicMasterKeyPem`和导出`exportPublicMasterKeyPem`
+- 用户私钥的生成`extractKey`
+- 数据加密`encrypt`
 
 这个类的用户包括两个不同角色，权威中心和用户。其中权威中心调用主密钥的生成、主密钥的导入导出、主公钥导出和用户私钥生成这几个接口，而用户调用主公钥导入和加密这两个接口。
 
-类`Sm9EncKey`对象是由`Sm9SEncMasterKey`的`extractKey`方法生成的。
+类`Sm9EncKey`对象是由`Sm9EncMasterKey`的`extractKey`方法生成的。
 
 ```java
 public class Sm9EncKey {
-	public Sm9EncKey(String id);
-	public String getId();
-	public void exportEncryptedPrivateKeyInfoPem(String pass, String file);
-	public void importEncryptedPrivateKeyInfoPem(String pass, String file);
-	public byte[] decrypt(byte[] ciphertext);
+  public Sm9EncKey(String id);
+  public String getId();
+  public void exportEncryptedPrivateKeyInfoPem(String pass, String file);
+  public void importEncryptedPrivateKeyInfoPem(String pass, String file);
+  public byte[] decrypt(byte[] ciphertext);
 }
 ```
 
@@ -896,20 +934,20 @@ import org.gmssl.Sm9EncKey;
 
 public class Sm9EncExample {
 
-	public static void main(String[] args) {
+  public static void main(String[] args) {
 
-		Sm9EncMasterKey enc_master_key = new Sm9EncMasterKey();
-		enc_master_key.generateMasterKey();
-		enc_master_key.exportPublicMasterKeyPem("sm9enc.mpk");
+    Sm9EncMasterKey enc_master_key = new Sm9EncMasterKey();
+    enc_master_key.generateMasterKey();
+    enc_master_key.exportPublicMasterKeyPem("sm9enc.mpk");
 
-		Sm9EncMasterKey enc_master_pub_key = new Sm9EncMasterKey();
-		enc_master_pub_key.importPublicMasterKeyPem("sm9enc.mpk");
+    Sm9EncMasterKey enc_master_pub_key = new Sm9EncMasterKey();
+    enc_master_pub_key.importPublicMasterKeyPem("sm9enc.mpk");
 
-		byte[] ciphertext = enc_master_pub_key.encrypt("abc".getBytes(), "Bob");
+    byte[] ciphertext = enc_master_pub_key.encrypt("abc".getBytes(), "Bob");
 
-		Sm9EncKey enc_key = enc_master_key.extractKey("Bob");
-		byte[] plaintext = enc_key.decrypt(ciphertext);
-	}
+    Sm9EncKey enc_key = enc_master_key.extractKey("Bob");
+    byte[] plaintext = enc_key.decrypt(ciphertext);
+  }
 }
 ```
 
@@ -917,22 +955,22 @@ SM9签名功能由`Sm9SignMasterKey`、`Sm9SignKey`和`Sm9Signature`几个类实
 
 ```java
 public class Sm9SignMasterKey {
-	public Sm9SignMasterKey();
-	public void generateMasterKey();
-	public Sm9SignKey extractKey(String id);
-	public void importEncryptedMasterKeyInfoPem(String pass, String file);
-	public void exportEncryptedMasterKeyInfoPem(String pass, String file);
-	public void importPublicMasterKeyPem(String file);
-	public void exportPublicMasterKeyPem(String file);
+  public Sm9SignMasterKey();
+  public void generateMasterKey();
+  public Sm9SignKey extractKey(String id);
+  public void importEncryptedMasterKeyInfoPem(String pass, String file);
+  public void exportEncryptedMasterKeyInfoPem(String pass, String file);
+  public void importPublicMasterKeyPem(String file);
+  public void exportPublicMasterKeyPem(String file);
 }
 ```
 
 ```java
 public class Sm9SignKey {
-	public Sm9SignKey(String id);
-	public String getId();
-	public void exportEncryptedPrivateKeyInfoPem(String pass, String file);
-	public void importEncryptedPrivateKeyInfoPem(String pass, String file);
+  public Sm9SignKey(String id);
+  public String getId();
+  public void exportEncryptedPrivateKeyInfoPem(String pass, String file);
+  public void importEncryptedPrivateKeyInfoPem(String pass, String file);
 }
 ```
 
@@ -940,12 +978,12 @@ public class Sm9SignKey {
 
 ```java
 public class Sm9Signature {
-	public Sm9Signature(boolean do_sign);
-	public void reset(boolean do_sign);
-	public void update(byte[] data, int offset, int len);
-	public void update(byte[] data);
-	public byte[] sign(Sm9SignKey signKey);
-	public boolean verify(byte[] signature, Sm9SignMasterKey masterPublicKey, String id);
+  public Sm9Signature(boolean do_sign);
+  public void reset(boolean do_sign);
+  public void update(byte[] data, int offset, int len);
+  public void update(byte[] data);
+  public byte[] sign(Sm9SignKey signKey);
+  public boolean verify(byte[] signature, Sm9SignMasterKey masterPublicKey, String id);
 }
 ```
 
@@ -958,30 +996,29 @@ import org.gmssl.Sm9Signature;
 
 public class Sm9SignExample {
 
-	public static void main(String[] args) {
+  public static void main(String[] args) {
 
-		Sm9SignMasterKey sign_master_key = new Sm9SignMasterKey();
-		sign_master_key.generateMasterKey();
+    Sm9SignMasterKey sign_master_key = new Sm9SignMasterKey();
+    sign_master_key.generateMasterKey();
 
-		Sm9SignKey sign_key = sign_master_key.extractKey("Alice");
+    Sm9SignKey sign_key = sign_master_key.extractKey("Alice");
 
-		Sm9Signature sign = new Sm9Signature(true);
-		sign.update("abc".getBytes());
-		byte[] sig = sign.sign(sign_key);
+    Sm9Signature sign = new Sm9Signature(true);
+    sign.update("abc".getBytes());
+    byte[] sig = sign.sign(sign_key);
 
-		sign_master_key.exportPublicMasterKeyPem("sm9sign.mpk");
-		Sm9SignMasterKey sign_master_pub_key = new Sm9SignMasterKey();
-		sign_master_pub_key.importPublicMasterKeyPem("sm9sign.mpk");
+    sign_master_key.exportPublicMasterKeyPem("sm9sign.mpk");
+    Sm9SignMasterKey sign_master_pub_key = new Sm9SignMasterKey();
+    sign_master_pub_key.importPublicMasterKeyPem("sm9sign.mpk");
 
-		Sm9Signature verify = new Sm9Signature(false);
-		verify.update("abc".getBytes());
-		boolean verify_ret = verify.verify(sig, sign_master_pub_key, "Alice");
-		System.out.println("Verify result = " + verify_ret);
-	}
+    Sm9Signature verify = new Sm9Signature(false);
+    verify.update("abc".getBytes());
+    boolean verify_ret = verify.verify(sig, sign_master_pub_key, "Alice");
+    System.out.println("Verify result = " + verify_ret);
+  }
 }
 ```
 
 ### GmSSLException
 
 GmSSL-Java在遇到错误和异常时，会抛出`GmSSLException`异常。
-
