@@ -22,7 +22,7 @@ import java.security.Provider;
 public class GmSSLProvider extends Provider {
 
     public GmSSLProvider() {
-        super("GmSSL", "3.1.1", "GmSSL Provider");
+        super("GmSSL", "1.0.0", "GmSSL Provider");
 
         put("SecureRandom.Random", "org.gmssl.crypto.Random");
         put("Cipher.SM2", "org.gmssl.crypto.asymmetric.SM2Cipher");

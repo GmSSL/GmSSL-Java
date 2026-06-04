@@ -80,7 +80,7 @@ GmSSL-Java/
 ### 最新发布
 - GmSSL-Java发布页 [Releases](https://github.com/GmSSL/GmSSL-Java/releases)
 - 依赖的GmSSL发布页 [GmSSL Releases](https://github.com/guanzhi/GmSSL/releases)
-- 当前版本 **3.1.1**
+- 当前版本 **1.0.0**
 
 ## 编译和安装
 
@@ -139,13 +139,13 @@ mvn clean install
 <dependency>
     <groupId>org.gmssl</groupId>
     <artifactId>GmSSLJNI</artifactId>
-    <version>3.1.1</version>
+    <version>1.0.0</version>
 </dependency>
 ```
 
 ### Native库自动加载
 
-GmSSL-Java 3.1.1 内置了智能的 `NativeLoader` 机制，具备以下特性：
+GmSSL-Java 1.0.0 内置了智能的 `NativeLoader` 机制，具备以下特性：
 
 - **自动加载**：从Jar包的 `lib/` 资源目录自动提取并加载对应平台的本地动态库（`.dll` / `.so` / `.dylib`）
 - **防重复加载**：通过 `loadedLibraries` 映射缓存已加载的库，避免重复 `System.load` 导致错误

@@ -1,0 +1,241 @@
+name: Release
+
+on:
+  push:
+    tags: [ "v*" ]
+
+env:
+  BUILD_TYPE: Release
+  GMSSL_VERSION: v3.1.1
+  ARTIFACT_NAME_PREFIX: gmssljni-1.0.0
+  GMSSL_ROOT_LINUX: /usr/local
+  GMSSL_ROOT_MACOS: /usr/local
+  GMSSL_ROOT_WINDOWS: C:\Program Files\GmSSL
+
+jobs:
+  # ─── Linux x86_64 ───────────────────────────────────────────────
+  build-linux:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up JDK 17
+      uses: actions/setup-java@v4
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+        cache: maven
+
+    - name: Install system dependencies
+      run: sudo apt-get update && sudo apt-get install -y cmake build-essential unzip
+
+    - name: Build and install GmSSL
+      run: |
+        curl -L "https://github.com/guanzhi/GmSSL/archive/refs/tags/${GMSSL_VERSION}.zip" -o GmSSL.zip
+        unzip GmSSL.zip
+        cmake -S "GmSSL-${GMSSL_VERSION#v}" -B GmSSL-build \
+          -DCMAKE_BUILD_TYPE=${BUILD_TYPE} \
+          -DCMAKE_INSTALL_PREFIX=${GMSSL_ROOT_LINUX}
+        cmake --build GmSSL-build --config ${BUILD_TYPE} --parallel
+        sudo cmake --install GmSSL-build --config ${BUILD_TYPE}
+        sudo ldconfig
+        gmssl version
+
+    - name: Build with Maven
+      run: mvn -B -Dcmake.compile.config=${BUILD_TYPE} -Dgmssl.root=${GMSSL_ROOT_LINUX} package --file pom.xml
+
+    - name: Package Linux x86_64 artifacts
+      run: |
+        mkdir -p dist/${ARTIFACT_NAME_PREFIX}-linux-x86_64
+        cp target/build/${BUILD_TYPE}/libgmssljni.so dist/${ARTIFACT_NAME_PREFIX}-linux-x86_64/
+        cp ${GMSSL_ROOT_LINUX}/lib/libgmssl.so.3 dist/${ARTIFACT_NAME_PREFIX}-linux-x86_64/
+        cat > dist/${ARTIFACT_NAME_PREFIX}-linux-x86_64/README.txt << 'EOF'
+        GmSSL-Java 1.0.0 — Linux x86_64
+        ==============================
+        Installation:
+          cp libgmssljni.so /usr/local/lib/
+          cp libgmssl.so.3   /usr/local/lib/
+          sudo ldconfig
+        Or set LD_LIBRARY_PATH to this directory.
+        EOF
+        cd dist && tar czf ${ARTIFACT_NAME_PREFIX}-linux-x86_64.tar.gz ${ARTIFACT_NAME_PREFIX}-linux-x86_64
+
+    - name: Upload Linux artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: linux-x86_64
+        path: dist/${{ env.ARTIFACT_NAME_PREFIX }}-linux-x86_64.tar.gz
+
+    - name: Upload JAR artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: jar
+        path: target/*.jar
+
+  # ─── macOS ARM64 ─────────────────────────────────────────────────
+  build-macos:
+    runs-on: macos-14
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up JDK 17
+      uses: actions/setup-java@v4
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+        cache: maven
+
+    - name: Build and install GmSSL
+      run: |
+        curl -L "https://github.com/guanzhi/GmSSL/archive/refs/tags/${GMSSL_VERSION}.zip" -o GmSSL.zip
+        unzip GmSSL.zip
+        cmake -S "GmSSL-${GMSSL_VERSION#v}" -B GmSSL-build \
+          -DCMAKE_BUILD_TYPE=${BUILD_TYPE} \
+          -DCMAKE_INSTALL_PREFIX=${GMSSL_ROOT_MACOS}
+        cmake --build GmSSL-build --config ${BUILD_TYPE} --parallel
+        sudo cmake --install GmSSL-build --config ${BUILD_TYPE}
+        gmssl version
+      env:
+        DYLD_LIBRARY_PATH: /usr/local/lib
+
+    - name: Build with Maven
+      run: mvn -B -Dcmake.compile.config=${BUILD_TYPE} -Dgmssl.root=${GMSSL_ROOT_MACOS} package --file pom.xml
+      env:
+        DYLD_LIBRARY_PATH: /usr/local/lib
+
+    - name: Fix dylib install name and package macOS ARM64 artifacts
+      run: |
+        mkdir -p dist/${ARTIFACT_NAME_PREFIX}-macos-arm64
+        cp target/build/${BUILD_TYPE}/libgmssljni.dylib dist/${ARTIFACT_NAME_PREFIX}-macos-arm64/
+        cp ${GMSSL_ROOT_MACOS}/lib/libgmssl.3.dylib dist/${ARTIFACT_NAME_PREFIX}-macos-arm64/
+        install_name_tool -change /usr/local/lib/libgmssl.3.dylib @loader_path/libgmssl.3.dylib \
+          dist/${ARTIFACT_NAME_PREFIX}-macos-arm64/libgmssljni.dylib
+        cat > dist/${ARTIFACT_NAME_PREFIX}-macos-arm64/README.txt << 'EOF'
+        GmSSL-Java 1.0.0 — macOS ARM64 (Apple Silicon)
+        ==============================================
+        Installation:
+          cp libgmssljni.dylib /usr/local/lib/
+          cp libgmssl.3.dylib  /usr/local/lib/
+        Or keep both files together and set java.library.path.
+        EOF
+        cd dist && tar czf ${ARTIFACT_NAME_PREFIX}-macos-arm64.tar.gz ${ARTIFACT_NAME_PREFIX}-macos-arm64
+
+    - name: Upload macOS artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: macos-arm64
+        path: dist/${{ env.ARTIFACT_NAME_PREFIX }}-macos-arm64.tar.gz
+
+  # ─── Windows x86_64 ──────────────────────────────────────────────
+  build-windows:
+    runs-on: windows-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Configure MSVC
+      uses: ilammy/msvc-dev-cmd@v1
+      with:
+        arch: amd64
+
+    - name: Set up JDK 17
+      uses: actions/setup-java@v4
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+        cache: maven
+
+    - name: Build and install GmSSL
+      shell: pwsh
+      run: |
+        Invoke-WebRequest -Uri "https://github.com/guanzhi/GmSSL/archive/refs/tags/$env:GMSSL_VERSION.zip" -OutFile GmSSL.zip
+        Expand-Archive -Path GmSSL.zip -DestinationPath .
+        cmake -S "GmSSL-$($env:GMSSL_VERSION.TrimStart('v'))" -B GmSSL-build -G "NMake Makefiles" `
+          -DCMAKE_BUILD_TYPE=$env:BUILD_TYPE "-DCMAKE_INSTALL_PREFIX=$env:GMSSL_ROOT_WINDOWS"
+        cmake --build GmSSL-build --config $env:BUILD_TYPE
+        cmake --install GmSSL-build --config $env:BUILD_TYPE
+        "$env:GMSSL_ROOT_WINDOWS\bin" | Out-File -FilePath $env:GITHUB_PATH -Encoding utf8 -Append
+        & "$env:GMSSL_ROOT_WINDOWS\bin\gmssl.exe" version
+
+    - name: Build with Maven
+      shell: pwsh
+      run: mvn -B "-Dcmake.compile.config=$env:BUILD_TYPE" "-Dgmssl.root=$env:GMSSL_ROOT_WINDOWS" "-Dtest=!org.gmssl.Sm2Test,!org.gmssl.Sm9Test" package --file pom.xml
+
+    - name: Package Windows x86_64 artifacts
+      shell: pwsh
+      run: |
+        $dir = "dist\$env:ARTIFACT_NAME_PREFIX-windows-x86_64"
+        New-Item -ItemType Directory -Force -Path $dir
+        Copy-Item "target\build\$env:BUILD_TYPE\libgmssljni.dll" "$dir\"
+        Copy-Item "$env:GMSSL_ROOT_WINDOWS\bin\gmssl.dll" "$dir\"
+        @"
+        GmSSL-Java 1.0.0 — Windows x86_64
+        =================================
+        Installation:
+          Copy libgmssljni.dll and gmssl.dll to a directory on your PATH,
+          or keep them together with your application.
+        "@ | Out-File -FilePath "$dir\README.txt" -Encoding utf8
+        Compress-Archive -Path "$dir\*" -DestinationPath "dist\$env:ARTIFACT_NAME_PREFIX-windows-x86_64.zip"
+
+    - name: Upload Windows artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: windows-x86_64
+        path: dist/${{ env.ARTIFACT_NAME_PREFIX }}-windows-x86_64.zip
+
+  # ─── Create GitHub Release ───────────────────────────────────────
+  release:
+    needs: [build-linux, build-macos, build-windows]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+    - name: Download all artifacts
+      uses: actions/download-artifact@v4
+      with:
+        path: artifacts
+
+    - name: Display structure
+      run: ls -R artifacts
+
+    - name: Create GitHub Release
+      uses: softprops/action-gh-release@v1
+      with:
+        name: GmSSL-Java 1.0.0
+        body: |
+          ## GmSSL-Java 1.0.0
+
+          基于 [GmSSL ${{ env.GMSSL_VERSION }}](https://github.com/guanzhi/GmSSL/releases/tag/${{ env.GMSSL_VERSION }})
+
+          ### 包含的密码算法
+          - 随机数生成器
+          - SM3 哈希、HMAC-SM3、SM3-PBKDF2
+          - SM4 分组密码（ECB/CBC/CTR/GCM 模式）
+          - ZUC 序列密码
+          - SM2 加密/签名/证书
+          - SM9 基于身份加密/签名
+          - JCE Provider 支持
+
+          ### 平台下载
+
+          | 平台 | 文件 |
+          |------|------|
+          | Linux x86_64 | `gmssljni-1.0.0-linux-x86_64.tar.gz` |
+          | macOS ARM64 | `gmssljni-1.0.0-macos-arm64.tar.gz` |
+          | Windows x86_64 | `gmssljni-1.0.0-windows-x86_64.zip` |
+          | JAR（通用） | `GmSSLJNI-1.0.0.jar` |
+
+          ### 安装说明
+          解压对应平台的压缩包，将 native 库文件放入系统库路径，或通过 `java.library.path` 指定。
+
+          🤖 Generated with [Claude Code](https://claude.com/claude-code)
+        files: |
+          artifacts/linux-x86_64/*
+          artifacts/macos-arm64/*
+          artifacts/windows-x86_64/*
+          artifacts/jar/*
+        draft: false
+        prerelease: false
