@@ -18,12 +18,13 @@
 #include <gmssl/zuc.h>
 #include <gmssl/mem.h>
 #include <gmssl/rand.h>
-#include <gmssl/aead.h>
 #include <gmssl/x509.h>
 #include <gmssl/error.h>
 #include <gmssl/pbkdf2.h>
 #include <gmssl/version.h>
 #include "gmssljni.h"
+
+#define SM2_SIGNATURE_CTX_SIZE (sizeof(SM2_SIGN_CTX) > sizeof(SM2_VERIFY_CTX) ? sizeof(SM2_SIGN_CTX) : sizeof(SM2_VERIFY_CTX))
 
 
 static int check_buf(const jbyte *buf, jint bufsiz, jint offset, jint outlen)
@@ -390,7 +391,7 @@ JNIEXPORT jbyteArray JNICALL Java_org_gmssl_GmSSLJNI_sm3_1pbkdf2(
 		goto end;
 	}
 
-	if (pbkdf2_hmac_sm3_genkey(pass_str, strlen(pass_str),
+	if (sm3_pbkdf2(pass_str, strlen(pass_str),
 		(const uint8_t *)saltbuf, saltlen, iter, keylen, keybuf) != 1) {
 		error_print();
 		goto end;
@@ -1051,7 +1052,7 @@ JNIEXPORT jint JNICALL Java_org_gmssl_GmSSLJNI_sm4_1ctr_1decrypt_1init(
 		error_print();
 		goto end;
 	}
-	if (sm4_ctr_decrypt_init((SM4_CTR_CTX *)sm4_ctr_ctx, (uint8_t *)keybuf, (uint8_t *)ivbuf) != 1) {
+	if (sm4_ctr_encrypt_init((SM4_CTR_CTX *)sm4_ctr_ctx, (uint8_t *)keybuf, (uint8_t *)ivbuf) != 1) {
 		error_print();
 		goto end;
 	}
@@ -1101,7 +1102,7 @@ JNIEXPORT jint JNICALL Java_org_gmssl_GmSSLJNI_sm4_1ctr_1decrypt_1update(
 		error_print();
 		goto end;
 	}
-	if (sm4_ctr_decrypt_update((SM4_CTR_CTX *)sm4_ctr_ctx, (uint8_t *)inbuf + in_offset, (size_t)inlen,
+	if (sm4_ctr_encrypt_update((SM4_CTR_CTX *)sm4_ctr_ctx, (uint8_t *)inbuf + in_offset, (size_t)inlen,
 		(uint8_t *)outbuf + out_offset, &outlen) != 1) {
 		error_print();
 		goto end;
@@ -1140,7 +1141,7 @@ JNIEXPORT jint JNICALL Java_org_gmssl_GmSSLJNI_sm4_1ctr_1decrypt_1finish(
 		error_print();
 		goto end;
 	}
-	if (sm4_ctr_decrypt_finish((SM4_CTR_CTX *)sm4_ctr_ctx,
+	if (sm4_ctr_encrypt_finish((SM4_CTR_CTX *)sm4_ctr_ctx,
 		(uint8_t *)outbuf + offset, &outlen) != 1) {
 		error_print();
 		goto end;
@@ -2188,11 +2189,11 @@ JNIEXPORT jlong JNICALL Java_org_gmssl_GmSSLJNI_sm2_1sign_1ctx_1new(
 {
 	jlong sm2_sign_ctx;
 
-	if (!(sm2_sign_ctx = (jlong)malloc(sizeof(SM2_SIGN_CTX)))) {
+	if (!(sm2_sign_ctx = (jlong)malloc(SM2_SIGNATURE_CTX_SIZE))) {
 		error_print();
 		return 0;
 	}
-	memset((SM2_SIGN_CTX *)sm2_sign_ctx, 0, sizeof(SM2_SIGN_CTX));
+	memset((void *)sm2_sign_ctx, 0, SM2_SIGNATURE_CTX_SIZE);
 	return sm2_sign_ctx;
 }
 
@@ -2206,7 +2207,7 @@ JNIEXPORT void JNICALL Java_org_gmssl_GmSSLJNI_sm2_1sign_1ctx_1free(
 	jlong sm2_sign_ctx)
 {
 	if (sm2_sign_ctx) {
-		gmssl_secure_clear((SM2_SIGN_CTX *)sm2_sign_ctx, sizeof(SM2_SIGN_CTX));
+		gmssl_secure_clear((void *)sm2_sign_ctx, SM2_SIGNATURE_CTX_SIZE);
 		free((SM2_SIGN_CTX *)sm2_sign_ctx);
 	}
 }
@@ -2333,7 +2334,7 @@ JNIEXPORT jint JNICALL Java_org_gmssl_GmSSLJNI_sm2_1verify_1init(
 		error_print();
 		return -1;
 	}
-	if (sm2_verify_init((SM2_SIGN_CTX *)sm2_sign_ctx, (SM2_KEY *)sm2_pub, id_str, strlen(id_str)) != 1) {
+	if (sm2_verify_init((SM2_VERIFY_CTX *)sm2_sign_ctx, (SM2_KEY *)sm2_pub, id_str, strlen(id_str)) != 1) {
 		error_print();
 		goto end;
 	}
@@ -2368,7 +2369,7 @@ JNIEXPORT jint JNICALL Java_org_gmssl_GmSSLJNI_sm2_1verify_1update(
 		error_print();
 		goto end;
 	}
-	if (sm2_verify_update((SM2_SIGN_CTX *)sm2_sign_ctx, (uint8_t *)buf + offset, (size_t)length) != 1) {
+	if (sm2_verify_update((SM2_VERIFY_CTX *)sm2_sign_ctx, (uint8_t *)buf + offset, (size_t)length) != 1) {
 		error_print();
 		goto end;
 	}
@@ -2400,7 +2401,7 @@ JNIEXPORT jint JNICALL Java_org_gmssl_GmSSLJNI_sm2_1verify_1finish(
 		return -1;
 	}
 	siglen = (*env)->GetArrayLength(env, sig);
-	if ((ret = sm2_verify_finish((SM2_SIGN_CTX *)sm2_sign_ctx, (uint8_t *)sigbuf, (size_t)siglen)) < 0) {
+	if ((ret = sm2_verify_finish((SM2_VERIFY_CTX *)sm2_sign_ctx, (uint8_t *)sigbuf, (size_t)siglen)) < 0) {
 		error_print();
 		goto end;
 	}
@@ -3815,6 +3816,7 @@ JNIEXPORT jlong JNICALL Java_org_gmssl_GmSSLJNI_cert_1get_1subject_1public_1key(
 	jbyte *certbuf;
 	jsize certlen;
 	SM2_KEY *sm2_pub = NULL;
+	X509_KEY x509_key;
 
 	if (!(certbuf = (*env)->GetByteArrayElements(env, cert, NULL))) {
 		error_print();
@@ -3826,10 +3828,18 @@ JNIEXPORT jlong JNICALL Java_org_gmssl_GmSSLJNI_cert_1get_1subject_1public_1key(
 		goto end;
 	}
 	memset(sm2_pub, 0, sizeof(SM2_KEY));
-	if (x509_cert_get_subject_public_key((uint8_t *)certbuf, certlen, sm2_pub) != 1) {
+	memset(&x509_key, 0, sizeof(x509_key));
+	if (x509_cert_get_subject_public_key((uint8_t *)certbuf, certlen, &x509_key) != 1) {
 		error_print();
 		goto end;
 	}
+	if (x509_key.algor != OID_ec_public_key || x509_key.algor_param != OID_sm2) {
+		error_print();
+		x509_key_cleanup(&x509_key);
+		goto end;
+	}
+	memcpy(sm2_pub, &x509_key.u.sm2_key, sizeof(SM2_KEY));
+	x509_key_cleanup(&x509_key);
 	ret = (jlong)sm2_pub;
 	sm2_pub = NULL;
 end:
@@ -3879,4 +3889,3 @@ end:
 	if (id_str) (*env)->ReleaseStringUTFChars(env, ca_sm2_id, id_str);
 	return ret;
 }
-

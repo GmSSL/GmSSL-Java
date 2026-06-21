@@ -24,8 +24,8 @@ endif()
 set(GMSSL_INCLUDE_DIR "${GMSSL_PARENT_DIR}/include")
 set(GMSSL_LIBRARY_DIR "${GMSSL_PARENT_DIR}/lib")
 
-if(NOT EXISTS "${GMSSL_INCLUDE_DIR}/gmssl/aead.h")
-    message(FATAL_ERROR "GmSSL headers at ${GMSSL_INCLUDE_DIR} are incompatible: gmssl/aead.h is missing. Use guanzhi/GmSSL release v3.1.1 or a compatible release.")
+if(NOT EXISTS "${GMSSL_INCLUDE_DIR}/gmssl/sm4.h")
+    message(FATAL_ERROR "GmSSL headers at ${GMSSL_INCLUDE_DIR} are incompatible: gmssl/sm4.h is missing. Use guanzhi/GmSSL release v3.2.0 or a compatible release.")
 endif()
 
 unset(GMSSL_LIBRARY CACHE)

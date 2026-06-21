@@ -6,7 +6,7 @@ on:
 
 env:
   BUILD_TYPE: Release
-  GMSSL_VERSION: v3.1.1
+  GMSSL_VERSION: v3.2.0
   ARTIFACT_NAME_PREFIX: gmssljni-1.0.0
   GMSSL_ROOT_LINUX: /usr/local
   GMSSL_ROOT_MACOS: /usr/local

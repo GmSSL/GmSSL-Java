@@ -8,7 +8,7 @@ on:
 
 env:
   BUILD_TYPE: Release
-  GMSSL_VERSION: v3.1.1
+  GMSSL_VERSION: v3.2.0
   GMSSL_ROOT: /usr/local
 
 jobs:
